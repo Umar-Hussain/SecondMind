@@ -11,6 +11,7 @@ import Scout from "./pages/Scout.jsx";
 import Train from "./pages/Train.jsx";
 import Progress from "./pages/Progress.jsx";
 import Profile from "./pages/Profile.jsx";
+import Users from "./pages/Users.jsx";
 
 const PAGES = [
   ["repertoires", "Repertoires"],
@@ -76,7 +77,7 @@ export default function App() {
       <header className="topbar">
         <button className="brand-btn" onClick={() => go("repertoires")}><Brand /></button>
         <nav className={menu ? "open" : ""}>
-          {PAGES.map(([id, label]) => (
+          {[...PAGES, ...(user.role === "admin" ? [["users", "Users"]] : [])].map(([id, label]) => (
             <button key={id} className={page === id && !openRep ? "active" : ""} onClick={() => go(id)}>{label}</button>
           ))}
         </nav>
@@ -110,6 +111,7 @@ export default function App() {
             {page === "train" && <Train user={user} />}
             {page === "progress" && <Progress user={user} />}
             {page === "profile" && <Profile user={user} setUser={setUser} />}
+            {page === "users" && user.role === "admin" && <Users />}
           </>
         )}
       </main>

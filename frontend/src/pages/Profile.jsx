@@ -68,7 +68,46 @@ export default function Profile({ user, setUser }) {
           </ul>
         )}
       </div>
+      <PasswordCard />
       {error && <div className="alert">{error}</div>}
     </section>
+  );
+}
+
+function PasswordCard() {
+  const [form, setForm] = useState({ current: "", next: "", again: "" });
+  const [msg, setMsg] = useState(null);
+  const [error, setError] = useState(null);
+  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+
+  async function submit(e) {
+    e.preventDefault();
+    setMsg(null);
+    setError(null);
+    if (form.next !== form.again) {
+      setError("The new passwords do not match.");
+      return;
+    }
+    try {
+      await api.post("/auth/password", { current_password: form.current, new_password: form.next });
+      setForm({ current: "", next: "", again: "" });
+      setMsg("Password changed.");
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  return (
+    <form className="card" onSubmit={submit}>
+      <h3>Change password</h3>
+      <div className="form stack">
+        <label>Current password<input type="password" autoComplete="current-password" value={form.current} onChange={set("current")} required /></label>
+        <label>New password<input type="password" autoComplete="new-password" minLength={8} value={form.next} onChange={set("next")} required /></label>
+        <label>Repeat new password<input type="password" autoComplete="new-password" minLength={8} value={form.again} onChange={set("again")} required /></label>
+      </div>
+      <button className="primary">Change password</button>
+      {msg && <span className="ok small"> {msg}</span>}
+      {error && <div className="alert">{error}</div>}
+    </form>
   );
 }
