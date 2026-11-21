@@ -32,7 +32,14 @@ async function request(path, options = {}) {
     },
   });
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    // Not JSON: a proxy or crash page (e.g. "Internal Server Error"). Show something readable.
+    if (!res.ok) throw new Error(`Server error (${res.status}). Please try again in a moment.`);
+    throw new Error("The server sent an unexpected reply.");
+  }
   if (res.status === 401 && token) {
     setToken(null);
     window.dispatchEvent(new Event("secondmind:logout")); // session expired
