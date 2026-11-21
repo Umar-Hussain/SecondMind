@@ -15,7 +15,7 @@ export default function Report({ user }) {
     setBusy(true);
     setError(null);
     try {
-      setReport(await api.get(`/report?user_id=${user.id}&top=8`));
+      setReport(await api.get("/report?top=8"));
       setSel(0);
     } catch (e) {
       setError(e.message);

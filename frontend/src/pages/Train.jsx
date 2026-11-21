@@ -11,7 +11,7 @@ export default function Train({ user }) {
 
   async function next() {
     setResult(null);
-    const res = await api.get(`/quiz/next?user_id=${user.id}`);
+    const res = await api.get("/quiz/next");
     setQuiz(res.quiz);
     if (!res.quiz) setNote("No quizzes due right now.");
   }
@@ -19,7 +19,7 @@ export default function Train({ user }) {
   async function generate() {
     setBusy(true);
     try {
-      await api.post(`/quiz/generate?user_id=${user.id}`);
+      await api.post("/quiz/generate");
       await next();
     } finally {
       setBusy(false);
@@ -30,7 +30,7 @@ export default function Train({ user }) {
 
   async function onMove(m) {
     if (!quiz || result || m.reset) return;
-    setResult(await api.post(`/quiz/${quiz.id}/answer`, { user_id: user.id, move_uci: m.uci }));
+    setResult(await api.post(`/quiz/${quiz.id}/answer`, { move_uci: m.uci }));
   }
 
   const orientation = quiz && quiz.fen.split(" ")[1] === "b" ? "black" : "white";

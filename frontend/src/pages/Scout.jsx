@@ -14,7 +14,7 @@ export default function Scout({ user }) {
     setBusy(true);
     setError(null);
     try {
-      setB(await api.post("/scout", { user_id: user.id, opponent, platform }));
+      setB(await api.post("/scout", { opponent, platform }));
     } catch (e) {
       setError(e.message);
     } finally {

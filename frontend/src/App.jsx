@@ -1,82 +1,119 @@
 import { useCallback, useEffect, useState } from "react";
-import { api } from "./api.js";
-import Connect from "./pages/Connect.jsx";
-import Repertoire from "./pages/Repertoire.jsx";
+import { api, getToken, setToken } from "./api.js";
+import Brand from "./components/Brand.jsx";
+import Auth from "./pages/Auth.jsx";
+import Repertoires from "./pages/Repertoires.jsx";
+import Library from "./pages/Library.jsx";
+import Workspace from "./pages/Workspace.jsx";
 import Deviations from "./pages/Deviations.jsx";
 import Report from "./pages/Report.jsx";
 import Scout from "./pages/Scout.jsx";
 import Train from "./pages/Train.jsx";
 import Progress from "./pages/Progress.jsx";
+import Profile from "./pages/Profile.jsx";
 
 const PAGES = [
-  ["connect", "Connect"],
-  ["repertoire", "Repertoire"],
+  ["repertoires", "Repertoires"],
+  ["library", "Library"],
   ["deviations", "Deviations"],
   ["report", "Gap report"],
-  ["scout", "Scout & prepare"],
+  ["scout", "Prepare"],
   ["train", "Train"],
   ["progress", "Progress"],
 ];
 
-// The current user id is remembered in localStorage (a per-browser convenience only).
-function savedUser() {
-  try {
-    return JSON.parse(localStorage.getItem("repai.user") || "null");
-  } catch {
-    return null;
-  }
-}
-
 export default function App() {
-  const [page, setPage] = useState("connect");
-  const [user, setUserState] = useState(savedUser);
+  const [user, setUser] = useState(null);
+  const [checking, setChecking] = useState(Boolean(getToken()));
+  const [page, setPage] = useState("repertoires");
+  const [openRep, setOpenRep] = useState(null); // repertoire id shown in the workspace
   const [repertoires, setRepertoires] = useState([]);
   const [status, setStatus] = useState(null);
+  const [menu, setMenu] = useState(false);
 
-  const setUser = (u) => {
-    setUserState(u);
-    try { localStorage.setItem("repai.user", JSON.stringify(u)); } catch { /* storage disabled */ }
-  };
-
-  const reloadReps = useCallback(async () => {
-    if (user) setRepertoires(await api.get(`/repertoires?user_id=${user.id}`));
-  }, [user]);
-
-  useEffect(() => { reloadReps().catch(() => setUser(null)); }, [reloadReps]);
+  // Restore the session from the stored token.
+  useEffect(() => {
+    if (!getToken()) return;
+    api.get("/auth/me").then(setUser).catch(() => setToken(null)).finally(() => setChecking(false));
+  }, []);
+  useEffect(() => {
+    const onLogout = () => { setUser(null); setOpenRep(null); };
+    window.addEventListener("secondmind:logout", onLogout);
+    return () => window.removeEventListener("secondmind:logout", onLogout);
+  }, []);
   useEffect(() => { api.get("/engine/status").then(setStatus).catch(() => setStatus({ down: true })); }, []);
 
-  const needsUser = page !== "connect" && !user;
+  const reloadReps = useCallback(async () => {
+    if (user) setRepertoires(await api.get("/repertoires"));
+  }, [user]);
+  useEffect(() => { reloadReps().catch(() => {}); }, [reloadReps]);
+
+  function logout() {
+    setToken(null);
+    setUser(null);
+    setOpenRep(null);
+    setMenu(false);
+  }
+
+  function toggleTheme() {
+    const light = document.documentElement.dataset.theme !== "light";
+    if (light) document.documentElement.dataset.theme = "light";
+    else delete document.documentElement.dataset.theme;
+    try { localStorage.setItem("secondmind.theme", light ? "light" : "dark"); } catch { /* ignore */ }
+  }
+
+  function go(id) {
+    setPage(id);
+    setOpenRep(null);
+    setMenu(false);
+  }
+
+  if (checking) return <div className="center muted">Loading…</div>;
+  if (!user) return <Auth onLogin={(u) => { setUser(u); setPage("repertoires"); }} />;
+
   return (
     <div className="app">
-      <header>
-        <h1>♞ RepertoireAI</h1>
-        <nav>
+      <header className="topbar">
+        <button className="brand-btn" onClick={() => go("repertoires")}><Brand /></button>
+        <nav className={menu ? "open" : ""}>
           {PAGES.map(([id, label]) => (
-            <button key={id} className={page === id ? "active" : ""} onClick={() => setPage(id)}>{label}</button>
+            <button key={id} className={page === id && !openRep ? "active" : ""} onClick={() => go(id)}>{label}</button>
           ))}
         </nav>
-        <div className="status">
-          {status?.down ? <span className="error">backend offline</span> : status && (
-            <>
-              <span className={status.stockfish ? "ok" : "error"}>Stockfish {status.stockfish ? "✓" : "✗"}</span>
-              <span className={status.llm ? "ok" : "muted"}>Claude {status.llm ? "✓" : "off (templates)"}</span>
-            </>
+        <div className="topbar-right">
+          {status && !status.down && (
+            <span className="status-dots" title={`Stockfish ${status.stockfish ? "ready" : "missing"} · AI ${status.llm ? status.provider : "off (templates)"}`}>
+              <span className={`dot ${status.stockfish ? "good" : "bad"}`} /> engine
+              <span className={`dot ${status.llm ? "good" : "muted"}`} /> AI
+            </span>
           )}
+          <button className={`user-btn ${page === "profile" ? "active" : ""}`} onClick={() => go("profile")}>
+            {user.display_name || user.username}
+            {user.role === "admin" && <span className="tag library">admin</span>}
+          </button>
+          <button className="ghost" title="Light / dark theme" onClick={toggleTheme}>◐</button>
+          <button className="ghost" onClick={logout}>Log out</button>
+          <button className="hamburger" onClick={() => setMenu(!menu)} aria-label="Menu">☰</button>
         </div>
       </header>
       <main>
-        {needsUser ? <p>Connect an account first.</p> : (
+        {openRep ? (
+          <Workspace repId={openRep} user={user} onBack={() => { setOpenRep(null); reloadReps(); }}
+            onOpen={(id) => { reloadReps(); setOpenRep(id); }} />
+        ) : (
           <>
-            {page === "connect" && <Connect user={user} setUser={setUser} />}
-            {page === "repertoire" && <Repertoire user={user} repertoires={repertoires} reload={reloadReps} />}
+            {page === "repertoires" && <Repertoires repertoires={repertoires} reload={reloadReps} onOpen={setOpenRep} goLibrary={() => go("library")} />}
+            {page === "library" && <Library user={user} onOpen={setOpenRep} reloadMine={reloadReps} />}
             {page === "deviations" && <Deviations repertoires={repertoires} />}
             {page === "report" && <Report user={user} />}
             {page === "scout" && <Scout user={user} />}
             {page === "train" && <Train user={user} />}
             {page === "progress" && <Progress user={user} />}
+            {page === "profile" && <Profile user={user} setUser={setUser} />}
           </>
         )}
       </main>
+      <footer className="foot muted small">SecondMind · every move checked by Stockfish · AI explanations verified before you see them</footer>
     </div>
   );
 }

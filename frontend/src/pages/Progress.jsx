@@ -7,8 +7,8 @@ export default function Progress({ user }) {
   const [leaks, setLeaks] = useState([]);
 
   useEffect(() => {
-    api.get(`/progress?user_id=${user.id}`).then(setP);
-    api.get(`/leaks?user_id=${user.id}`).then(setLeaks);
+    api.get("/progress").then(setP);
+    api.get("/leaks").then(setLeaks);
   }, [user]);
 
   if (!p) return <p>Loading…</p>;
