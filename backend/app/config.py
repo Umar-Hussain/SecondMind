@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     # --- External services -------------------------------------------------
     anthropic_api_key: str = ""
-    anthropic_model: str = "claude-sonnet-5-5"
+    anthropic_model: str = "claude-opus-5-5"
     lichess_token: str = ""
     chesscom_contact_email: str = ""
     telegram_bot_token: str = ""
