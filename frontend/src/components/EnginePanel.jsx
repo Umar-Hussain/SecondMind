@@ -12,15 +12,24 @@ export default function EnginePanel({ fen, playerColor = "white" }) {
 
   useEffect(() => {
     const ws = new WebSocket(analysisSocketUrl());
+    let closedByUs = false; // StrictMode mounts twice in dev; ignore errors from sockets we closed
     wsRef.current = ws;
     ws.onopen = () => ws.send(JSON.stringify({ fen: fenRef.current }));
     ws.onmessage = (ev) => {
       const msg = JSON.parse(ev.data);
-      if (msg.type === "info" && msg.fen === fenRef.current) setInfo(msg);
+      if (msg.type === "info" && msg.fen === fenRef.current) {
+        setInfo(msg);
+        setError(null);
+      }
       if (msg.type === "error") setError(msg.message);
     };
-    ws.onerror = () => setError("Live analysis unavailable (is the backend running?)");
-    return () => ws.close();
+    ws.onerror = () => {
+      if (!closedByUs) setError("Live analysis unavailable (is the backend running?)");
+    };
+    return () => {
+      closedByUs = true;
+      ws.close();
+    };
   }, []);
 
   useEffect(() => {
