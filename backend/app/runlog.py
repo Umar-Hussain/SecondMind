@@ -27,9 +27,22 @@ def _jsonable(value: Any) -> Any:
     return str(value)
 
 
+_tables_ready = False
+
+
+def _ensure_tables() -> None:
+    global _tables_ready
+    if not _tables_ready:
+        from app.db import init_db
+
+        init_db()
+        _tables_ready = True
+
+
 def log_run(kind: str, name: str, input: Any = None, output: Any = None, ok: bool = True,
             latency_ms: float = 0.0, input_tokens: int = 0, output_tokens: int = 0) -> None:
     try:
+        _ensure_tables()
         with SessionLocal() as s:
             s.add(Run(kind=kind, name=name, input_json=_jsonable(input or {}), output_json=_jsonable(output or {}),
                       ok=ok, latency_ms=latency_ms, input_tokens=input_tokens, output_tokens=output_tokens))

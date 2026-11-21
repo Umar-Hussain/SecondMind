@@ -17,6 +17,10 @@ from sqlalchemy import create_engine
 # Tests always run offline against fixtures and without the LLM.
 os.environ.setdefault("OFFLINE", "1")
 os.environ["ANTHROPIC_API_KEY"] = ""
+# The global session (used by the run log and the API) points at a throwaway file.
+import tempfile  # noqa: E402
+
+os.environ["DATABASE_URL"] = "sqlite:///" + os.path.join(tempfile.mkdtemp(prefix="repai-"), "test.db").replace("\\", "/")
 
 from app.db import Base  # noqa: E402
 from app.config import get_settings  # noqa: E402
