@@ -419,12 +419,13 @@ def remove_move(session: Session, repertoire_id: int, key: str, move: str) -> in
 
 
 def delete_repertoire(session: Session, repertoire_id: int) -> None:
+    """Delete a repertoire and its rows. Children go first, as explicit ordered statements,
+    so databases that enforce foreign keys (Postgres) accept it."""
+    from sqlalchemy import delete
+
     from app.models import RepertoireDeviation, UncoveredLine
 
     for model in (RepertoireNode, RepertoireDeviation, UncoveredLine):
-        for row in session.scalars(select(model).where(model.repertoire_id == repertoire_id)):
-            session.delete(row)
-    rep = session.get(Repertoire, repertoire_id)
-    if rep is not None:
-        session.delete(rep)
+        session.execute(delete(model).where(model.repertoire_id == repertoire_id))
+    session.execute(delete(Repertoire).where(Repertoire.id == repertoire_id))
     session.commit()
