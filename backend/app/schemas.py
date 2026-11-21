@@ -203,7 +203,15 @@ class RepertoireDeviationOut(BaseModel):
     recommended_san: str = ""
     recommended_source: Literal["repertoire", "master", "engine"] | None = None
     reason: str = ""
-    classification: Literal["mistake", "harmless", "better", "repertoire_issue", "unjudged"]
+    # mistake > 80 cp, inaccuracy 31-80 cp, harmless <= 30 cp, better = beats the repertoire move by > 30 cp
+    classification: Literal["mistake", "inaccuracy", "harmless", "better", "repertoire_issue", "unjudged"]
+    repertoire_issue: bool = False  # the repertoire move itself is > 50 cp worse than the engine best
+    played_cp: int | None = None  # player's POV
+    repertoire_cp: int | None = None
+    best_cp: int | None = None
+    is_gambit: bool = False
+    status: str = "open"
+    game_ids: list[str] = Field(default_factory=list)
     games_count: int
     results: dict[str, int]
     avg_eval_loss: float
