@@ -41,6 +41,7 @@ def test_briefing_end_to_end(db) -> None:
     assert briefing.extra_lines
     for x in briefing.extra_lines:
         assert not x.in_repertoire and x.final_eval_cp >= 0 and len(x.moves) <= 16
+        assert x.opponent_color in ("white", "black")  # the board knows which side to prepare
         assert verify.verify_line(x.start_fen or chess.STARTING_FEN, x.moves).ok
     # The novelty is a move for the player, i.e. the side opposite the opponent in their top line.
     if briefing.novelty:

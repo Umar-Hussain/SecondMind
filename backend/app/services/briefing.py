@@ -73,6 +73,7 @@ def prepare(session: Session, user_id: int, opponent: str, platform: str = "lich
             line.goal = (f"Meet {opponent}'s favourite {opening} ({r['games']} games, they score "
                          f"{r['score']:.0%}) with sound master moves")
             line.master_games = prep_lines.cite_for(opening, eco)
+            line.opponent_color = r["color"]
             extra.append(line)
 
     for w in profile["weaknesses"][:2]:
@@ -93,6 +94,9 @@ def prepare(session: Session, user_id: int, opponent: str, platform: str = "lich
             board.push_uci(u)
         if board.turn == player and not board.is_game_over():
             novelty = prep_lines.find_novelty(board.fen(), depth=depth)
+            if novelty:
+                novelty["path"] = [m.uci() for m in board.move_stack]  # so the board can jump there
+                novelty["opponent_color"] = repeated[0]["color"]
 
     ideas: list[str] = []
     for r in repeated[:2]:

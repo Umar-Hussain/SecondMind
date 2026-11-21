@@ -242,6 +242,7 @@ class ExtraLine(BaseModel):
     master_games: list[Citation] = Field(default_factory=list)
     in_repertoire: bool = False
     explanation: str = ""
+    opponent_color: str | None = None  # the colour the opponent plays in this line
 
 
 class Briefing(BaseModel):
