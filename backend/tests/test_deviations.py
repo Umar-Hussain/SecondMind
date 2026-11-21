@@ -60,7 +60,10 @@ def test_ranking_by_game_count_without_engine() -> None:
 
 @pytest.mark.usefixtures("require_engine")
 def test_judged_deviations_white(db) -> None:
-    devs, unc = analyze_repertoire(_games(), WHITE, repertoire_id=1, depth=DEPTH)
+    from app.tools.repertoire import save_tree
+
+    rep = save_tree(db, None, WHITE, "pgn")  # stored rows must reference a real repertoire
+    devs, unc = analyze_repertoire(_games(), WHITE, repertoire_id=rep.id, depth=DEPTH)
     by = {d.played_san: d for d in devs}
     assert by["Nxe5"].classification == "mistake" and by["Nxe5"].games_count == 3
     assert by["e5"].classification == "mistake" and by["e5"].games_count == 2
@@ -68,8 +71,8 @@ def test_judged_deviations_white(db) -> None:
     assert {"Bc4", "Nxe5", "e5"} <= set(by)
     assert "Bb5" not in by and "Ba4" not in by
     # Store and load back in the same order.
-    store_results(db, 1, devs, unc)
-    loaded = load_deviations(db, 1, "white")
+    store_results(db, rep.id, devs, unc)
+    loaded = load_deviations(db, rep.id, "white")
     assert [d.played_san for d in loaded] == [d.played_san for d in devs]
 
 

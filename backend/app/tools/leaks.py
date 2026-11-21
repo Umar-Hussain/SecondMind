@@ -25,11 +25,11 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 
 import chess
-from sqlalchemy import delete
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.models import Leak
+from app.models import Leak, Quiz
 from app.schemas import NormalizedGame
 from app.tools import engine, gambits, masters
 from app.tools.openings import classify
@@ -231,6 +231,10 @@ def mine_leaks(
 def store_leaks(session: Session, user_id: int, leaks: Iterable[LeakOut], game_db_ids: dict[str, int] | None = None,
                 top: int = 30) -> list[Leak]:
     """Replace the user's open leaks with the freshly mined top leaks."""
+    old = select(Leak.id).where(Leak.user_id == user_id, Leak.status == "open")
+    # Quizzes made from old leaks stay (they are keyed by position); only the link is cleared,
+    # otherwise databases that enforce foreign keys would refuse to delete the old leaks.
+    session.execute(update(Quiz).where(Quiz.leak_id.in_(old)).values(leak_id=None))
     session.execute(delete(Leak).where(Leak.user_id == user_id, Leak.status == "open"))
     rows = []
     for lk in list(leaks)[:top]:
