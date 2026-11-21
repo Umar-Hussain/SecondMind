@@ -1,0 +1,17 @@
+[Event "Caro-Kann as Black"]
+[Site "RepertoireAI fixture"]
+[White "?"]
+[Black "Repertoire"]
+[Result "*"]
+
+1. e4 c6 2. d4 ( 2. Nc3 d5 { 3.d4 transposes to 2.d4 d5 3.Nc3. } ) 2... d5
+3. e5 { Advance. } ( 3. Nc3 dxe4 4. Nxe4 Bf5 { Classical. } )
+3... Bf5 4. Nf3 e6 5. Be2 c5 { Strike at the centre at once. } *
+
+[Event "Caro-Kann as Black"]
+[Site "RepertoireAI fixture"]
+[White "?"]
+[Black "Repertoire"]
+[Result "*"]
+
+1. d4 d5 2. c4 c6 { Slav setup. } *

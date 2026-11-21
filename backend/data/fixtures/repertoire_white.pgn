@@ -1,0 +1,11 @@
+[Event "e4 as White"]
+[Site "RepertoireAI fixture"]
+[White "Repertoire"]
+[Black "?"]
+[Result "*"]
+
+1. e4 { King's pawn, open games and Sicilians. }
+1... e5 ( 1... c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 { Open Sicilian main line. } )
+( 1... c6 2. d4 d5 3. e5 { Advance: gain space. } 3... Bf5 4. Nf3 e6 5. Be2 { Short system. } )
+( 1... e6 2. d4 d5 3. e5 c5 4. c3 { Support d4 with the c-pawn. } )
+2. Nf3 Nc6 3. Bb5 { The Ruy Lopez. } 3... a6 4. Ba4 { Keep the pin. } 4... Nf6 5. O-O *
