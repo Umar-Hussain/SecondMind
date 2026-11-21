@@ -1,0 +1,35 @@
+[project]
+name = "repertoire-ai"
+version = "0.1.0"
+description = "Personalized opening-repertoire and preparation agent for club chess players"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "python-chess>=1.10",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "sqlalchemy>=2.0",
+    "httpx>=0.27",
+    "anthropic>=0.40",
+    "rank_bm25>=0.2.2",
+    "numpy>=1.26",
+    "scikit-learn>=1.4",
+    "apscheduler>=3.10",
+    "ics>=0.7",
+    "python-telegram-bot>=21.0",
+    "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+# Heavy dependencies for the full RAG stack. Without them the retriever
+# falls back to a built-in TF-IDF embedder so everything still runs offline.
+rag = ["sentence-transformers>=2.7", "chromadb>=0.5"]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+pythonpath = ["backend"]
+markers = [
+    "engine: tests that need a real Stockfish binary",
+]
