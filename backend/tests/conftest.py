@@ -1,0 +1,52 @@
+"""Shared pytest fixtures.
+
+Every test gets an isolated in-memory SQLite database so tests never touch the
+developer's real ``repertoire.db``.
+"""
+
+from __future__ import annotations
+
+import os
+from collections.abc import Iterator
+
+import pytest
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
+from sqlalchemy import create_engine
+
+# Tests always run offline against fixtures and without the LLM.
+os.environ.setdefault("OFFLINE", "1")
+os.environ["ANTHROPIC_API_KEY"] = ""
+
+from app.db import Base  # noqa: E402
+from app.config import get_settings  # noqa: E402
+
+
+@pytest.fixture()
+def db() -> Iterator[Session]:
+    """Fresh in-memory database with every table created."""
+    from app import models  # noqa: F401
+
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine, expire_on_commit=False)()
+    try:
+        yield session
+    finally:
+        session.close()
+        engine.dispose()
+
+
+@pytest.fixture(scope="session")
+def stockfish_available() -> bool:
+    return get_settings().stockfish_abspath.exists()
+
+
+@pytest.fixture()
+def require_engine(stockfish_available: bool) -> None:
+    if not stockfish_available:
+        pytest.skip("Stockfish binary not found (set STOCKFISH_PATH)")
