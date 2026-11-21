@@ -11,6 +11,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Repository root: backend/app/config.py -> parents[2]
@@ -52,6 +53,12 @@ class Settings(BaseSettings):
 
     # --- Storage -----------------------------------------------------------
     database_url: str = f"sqlite:///{(ROOT_DIR / 'repertoire.db').as_posix()}"
+
+    @field_validator("database_url")
+    @classmethod
+    def _default_db(cls, v: str) -> str:
+        """An empty DATABASE_URL means the repo-root SQLite file, whatever the working directory."""
+        return v or f"sqlite:///{(ROOT_DIR / 'repertoire.db').as_posix()}"
 
     # --- Fixture / offline mode --------------------------------------------
     offline: bool = False
