@@ -8,7 +8,7 @@ import { browserEngineSupported, createBrowserEngine } from "../engine/browserEn
 // The engine runs in the visitor's browser (Stockfish WebAssembly) so the free server
 // only does batch analysis. If WebAssembly is unavailable it falls back to the
 // server's WebSocket stream. A new FEN cancels the previous search either way.
-export default function EnginePanel({ fen, playerColor = "white" }) {
+export default function EnginePanel({ fen, playerColor = "white", hideMasters = false }) {
   const [info, setInfo] = useState(null);
   const [masters, setMasters] = useState(null);
   const [error, setError] = useState(null);
@@ -63,6 +63,7 @@ export default function EnginePanel({ fen, playerColor = "white" }) {
       if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ fen }));
     }
     let cancelled = false;
+    if (hideMasters) return undefined;
     api.get(`/masters?fen=${encodeURIComponent(fen)}`)
       .then((m) => { if (!cancelled) setMasters(m); })
       .catch(() => { if (!cancelled) setMasters(null); });
@@ -106,7 +107,7 @@ export default function EnginePanel({ fen, playerColor = "white" }) {
             </ol>
           </>
         )}
-        <div className="masters">
+        {!hideMasters && <div className="masters">
           <strong>Masters</strong> {masterSource && <span className="muted">({masterSource})</span>}
           {masterMoves.length === 0 && <span className="muted"> no master data</span>}
           {masterMoves.map((m) => (
@@ -114,7 +115,7 @@ export default function EnginePanel({ fen, playerColor = "white" }) {
               {m.san} <small>{m.games}</small>
             </span>
           ))}
-        </div>
+        </div>}
       </div>
     </div>
   );
