@@ -1,4 +1,12 @@
-"""Anthropic (Claude) wrapper: structured output, tool use, retries, logging (spec 9.1, Phase 12).
+"""LLM wrapper: structured output, tool use, retries, logging (spec 9.1, Phase 12).
+
+Two backends share one interface:
+
+* ``OpenAICompatBackend`` - any OpenAI-style ``/chat/completions`` endpoint:
+  **Groq** (free tier, default), a local **Ollama** server, Gemini/OpenRouter.
+* ``AnthropicBackend`` - Claude through the official SDK (paid, optional).
+
+The provider is chosen with ``LLM_PROVIDER`` in ``.env``.
 
 * ``generate_structured(prompt, schema)`` asks for JSON matching a Pydantic
   schema (constrained with ``messages.parse(output_format=...)``), validates
@@ -33,6 +41,14 @@ class LLMUnavailable(RuntimeError):
 
 class LLMRefused(RuntimeError):
     """The model declined the request (``stop_reason == "refusal"``)."""
+
+
+class LLMError(RuntimeError):
+    """The provider failed (rate limit exhausted, network, server error).
+
+    Callers treat it like a guard failure and fall back to templates, so a free
+    tier running out of quota never breaks the app.
+    """
 
 
 @dataclass
@@ -91,6 +107,126 @@ class AnthropicBackend:
         return self._reply(resp)
 
 
+class OpenAICompatBackend:
+    """OpenAI-style chat completions over plain HTTP (no extra SDK needed).
+
+    The rest of the code speaks the Anthropic message shape (content blocks,
+    ``tool_use`` / ``tool_result``); this class translates both ways so the
+    agent loop works unchanged on Groq or Ollama.
+    """
+
+    def __init__(self, base_url: str, model: str, api_key: str = "", http: Any = None,
+                 max_retries: int = 3, timeout: float = 90.0) -> None:
+        import httpx
+
+        if not base_url or not model:
+            raise LLMUnavailable("LLM_BASE_URL and LLM_MODEL are required for this provider")
+        self.base_url, self.model = base_url.rstrip("/"), model
+        self.max_retries = max_retries
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        self._http = http or httpx.Client(timeout=timeout)
+        self._http.headers.update(headers)
+
+    # --- message translation (Anthropic shape -> OpenAI shape) ----------------
+    @staticmethod
+    def _get(b: Any, key: str) -> Any:
+        return b.get(key) if isinstance(b, dict) else getattr(b, key, None)
+
+    def _to_openai(self, system: str, messages: list[dict]) -> list[dict]:
+        out: list[dict] = [{"role": "system", "content": system}] if system else []
+        for m in messages:
+            content = m["content"]
+            if isinstance(content, str):
+                out.append({"role": m["role"], "content": content})
+                continue
+            if m["role"] == "assistant":
+                text = "".join(self._get(b, "text") or "" for b in content if self._get(b, "type") == "text")
+                calls = [{"id": self._get(b, "id"), "type": "function",
+                          "function": {"name": self._get(b, "name"),
+                                       "arguments": json.dumps(self._get(b, "input") or {})}}
+                         for b in content if self._get(b, "type") == "tool_use"]
+                msg: dict = {"role": "assistant", "content": text or None}
+                if calls:
+                    msg["tool_calls"] = calls
+                out.append(msg)
+            else:  # user turn carrying tool results
+                for b in content:
+                    if self._get(b, "type") == "tool_result":
+                        out.append({"role": "tool", "tool_call_id": self._get(b, "tool_use_id"),
+                                    "content": self._get(b, "content")})
+                    elif self._get(b, "type") == "text":
+                        out.append({"role": "user", "content": self._get(b, "text")})
+        return out
+
+    # --- HTTP with backoff --------------------------------------------------------
+    def _post(self, payload: dict) -> dict:
+        import httpx
+
+        delay = 2.0
+        for attempt in range(self.max_retries + 1):
+            try:
+                resp = self._http.post(f"{self.base_url}/chat/completions", json=payload)
+            except httpx.HTTPError as exc:
+                if attempt == self.max_retries:
+                    raise LLMError(f"network error: {exc}") from exc
+                time.sleep(delay)
+                delay *= 2
+                continue
+            if resp.status_code == 429 or resp.status_code >= 500:
+                if attempt == self.max_retries:
+                    raise LLMError(f"provider returned {resp.status_code} after {attempt + 1} attempts")
+                wait = float(resp.headers.get("retry-after", 0) or 0)
+                time.sleep(min(max(wait, delay), 30.0))
+                delay *= 2
+                continue
+            if resp.status_code >= 400:
+                raise LLMError(f"provider returned {resp.status_code}: {resp.text[:300]}")
+            return resp.json()
+        raise LLMError("unreachable")  # pragma: no cover
+
+    @staticmethod
+    def _reply(data: dict) -> LLMReply:
+        choice = data["choices"][0]
+        msg = choice["message"]
+        usage = data.get("usage") or {}
+        content: list[Any] = []
+        if msg.get("content"):
+            content.append({"type": "text", "text": msg["content"]})
+        for call in msg.get("tool_calls") or []:
+            try:
+                args = json.loads(call["function"].get("arguments") or "{}")
+            except json.JSONDecodeError:
+                args = {"_raw": call["function"].get("arguments")}  # validate_args rejects it
+            content.append({"type": "tool_use", "id": call["id"], "name": call["function"]["name"], "input": args})
+        finish = choice.get("finish_reason")
+        return LLMReply(text=msg.get("content") or "", input_tokens=usage.get("prompt_tokens", 0),
+                        output_tokens=usage.get("completion_tokens", 0),
+                        stop_reason="tool_use" if finish == "tool_calls" else (finish or "stop"), content=content)
+
+    def structured(self, system, messages, schema, max_tokens):
+        # JSON mode guarantees syntactically valid JSON; the schema is stated in the
+        # system prompt and validated locally (generate_structured retries on errors).
+        schema_txt = json.dumps(schema.model_json_schema())
+        sys_prompt = (system + "\n\n" if system else "") + \
+            f"Reply with one JSON object only, matching this JSON schema:\n{schema_txt}"
+        return self._reply(self._post({"model": self.model, "messages": self._to_openai(sys_prompt, messages),
+                                       "max_tokens": max_tokens, "temperature": 0.2,
+                                       "response_format": {"type": "json_object"}}))
+
+    def text(self, system, messages, max_tokens):
+        return self._reply(self._post({"model": self.model, "messages": self._to_openai(system, messages),
+                                       "max_tokens": max_tokens, "temperature": 0.3}))
+
+    def tools(self, system, messages, tools, max_tokens):
+        fns = [{"type": "function", "function": {"name": t["name"], "description": t["description"],
+                                                 "parameters": t["input_schema"]}} for t in tools]
+        return self._reply(self._post({"model": self.model, "messages": self._to_openai(system, messages),
+                                       "tools": fns, "tool_choice": "auto", "max_tokens": max_tokens,
+                                       "temperature": 0.2}))
+
+
 class FakeBackend:
     """Deterministic backend for tests: returns queued replies in order."""
 
@@ -134,8 +270,12 @@ def get_backend() -> Backend:
     if _backend is None:
         s = get_settings()
         if not s.llm_enabled:
-            raise LLMUnavailable("ANTHROPIC_API_KEY is not set")
-        _backend = AnthropicBackend(s.anthropic_api_key, s.anthropic_model)
+            raise LLMUnavailable(f"LLM provider '{s.llm_provider}' is not configured (missing API key)")
+        if s.llm_provider.lower() == "anthropic":
+            _backend = AnthropicBackend(s.anthropic_api_key, s.anthropic_model)
+        else:
+            base_url, model, key = s.llm_settings
+            _backend = OpenAICompatBackend(base_url, model, key)
     return _backend
 
 
