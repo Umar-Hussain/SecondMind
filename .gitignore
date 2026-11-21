@@ -30,3 +30,6 @@ Thumbs.db
 
 # Stockfish WASM is copied from node_modules at dev/build time
 frontend/public/stockfish/
+
+# Local logs
+*.log

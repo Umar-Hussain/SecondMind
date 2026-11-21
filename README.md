@@ -23,12 +23,12 @@ Course project — AI-4009 Generative AI, Assignment 3 (Pure Product track).
 | Lichess + Chess.com ingestion, cross-platform de-duplication | ✅ |
 | Repertoire import (PGN with variations, move list, Lichess study), position-keyed tree, transpositions | ✅ |
 | Ranked repertoire deviations (most games first), judged by Stockfish, uncovered opponent lines | ✅ |
-| Live Stockfish analysis over WebSocket (eval bar, top 3 lines, master stats) | ✅ |
+| Live Stockfish analysis in the browser (WebAssembly; eval bar, top 3 lines, master stats) | ✅ |
 | Leak mining with gambit-aware rules (zero false positives on gambit theory) | ✅ |
 | Masters-vs-Stockfish move recommender with stored reasons | ✅ |
 | Hybrid RAG (dense + BM25, RRF) with citations | ✅ |
 | Verification guard (legality, engine soundness, citations, unverified moves in text) | ✅ |
-| Claude client: structured output, retries, run log; agent with 13 tools | ✅ |
+| LLM client (free Groq by default; Ollama, Claude optional): structured output, retries, run log; agent with 13 tools | ✅ |
 | Gap report in 4 conditions (template / LLM / LLM+RAG / guarded) | ✅ |
 | Opponent scouting, briefing, extra lines, novelty | ✅ |
 | Quizzes + SM-2, `.ics` calendar reminders, scheduled jobs | ✅ |
@@ -68,10 +68,14 @@ Optional:
 python scripts/download_eco.py          # full Lichess ECO tables (CC0) instead of the bundled subset
 python scripts/calibrate_gambits.py 18  # recompute gambit baselines with Stockfish
 python -m app.services.jobs             # scheduler (daily re-mining and quizzes), run from backend/
-python eval/run_eval.py                 # evaluation; add ANTHROPIC_API_KEY for LLM conditions A/B/C
+python eval/run_eval.py                 # evaluation; LLM conditions A/B/C need LLM_API_KEY
 ```
 
-Without `ANTHROPIC_API_KEY` everything still runs: explanations fall back to deterministic templates
+**Free LLM.** Set `LLM_API_KEY` to a free Groq key (console.groq.com); the default model is
+`openai/gpt-oss-120b`. For a fully local setup use `LLM_PROVIDER=ollama` (no key). Claude is optional
+(`LLM_PROVIDER=anthropic`). If the free quota runs out, the app keeps working on templates.
+
+Without any LLM configured everything still runs: explanations fall back to deterministic templates
 (evaluation condition 0) and the agent runs a fixed tool plan.
 
 ### Demo script (about 5 minutes)
@@ -94,7 +98,7 @@ React web app (board, chess.js) ── .ics calendar reminders
             │  REST + WebSocket
 FastAPI  (api/routes.py, api/ws.py)
             │
-Agent orchestrator (llm/agent.py) ── Claude: structured output, tool use (llm/client.py, llm/prompts.py)
+Agent orchestrator (llm/agent.py) ── LLM (Groq / Ollama / Claude): structured output, tool use
             │                                  ▲ every output passes the verification guard
 Deterministic tools (tools/*.py)               │
   lichess · chesscom · games · repertoire · deviations · openings · engine (Stockfish)
@@ -133,7 +137,8 @@ master statistics, gambit detection, the move-selection rule and SM-2 scheduling
 | Repertoire deviations | planted fixture set | precision 1.0, recall 1.0, 0 in-book false positives | — |
 | Recommender | 50 positions | see `summary.md` | always the most popular move |
 
-LLM conditions A/B/C (hallucination rate, citation validity, latency, cost) run when an API key is set.
+LLM conditions A/B/C (hallucination rate, citation validity, latency, cost) run on the configured
+provider; see `eval/results/summary.md` section 6.
 
 ---
 

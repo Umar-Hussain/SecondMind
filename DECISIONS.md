@@ -38,7 +38,11 @@ down here, and continue.
 
 ## AI layer
 
-12. **Model.** `claude-opus-5-5` by default (`ANTHROPIC_MODEL`), adaptive thinking (default), effort
+12. **Model.** The project must run at zero cost, so the default provider is **Groq's free tier** with
+    `openai/gpt-oss-120b` (open weights), reached through one OpenAI-compatible connector that also
+    serves a local Ollama model. Groq's JSON mode guarantees valid JSON; the schema is given in the
+    prompt and validated locally, with retries. Quota errors (429) back off, then fall back to
+    templates. Claude remains supported (`LLM_PROVIDER=anthropic`, `claude-opus-5-5`, adaptive thinking, effort
     `medium`. Structured output uses `messages.parse(output_format=...)` and is validated again locally.
 13. **Guard failure.** The spec says "retry once, then drop the item". For report items we drop the
     *LLM explanation* and show the deterministic template for that item instead, so the leak itself
@@ -62,3 +66,10 @@ down here, and continue.
     FEN, depth, MultiPV and move restriction.
 20. **Frontend pins** React 18.3 + react-chessboard 4.7 (the v5 API changed).
 21. **Scheduler** is APScheduler in its own process; game-time briefings use `replace_existing` ids.
+22. **Live analysis runs in the browser.** Stockfish 19 *lite, single-threaded* WebAssembly (about 1.8 MB)
+    runs in a Web Worker, so free hosting only does batch analysis and the guard. The single-threaded
+    build needs no COOP/COEP headers. The server WebSocket stays as a fallback. Batch analysis and the
+    guard stay on the server because the server cannot trust evaluations sent by a browser.
+23. **Telegram removed.** The web app is the only delivery channel; calendar `.ics` reminders remain.
+24. **Groq model.** `llama-3.3-70b-versatile` was not available on the account; `openai/gpt-oss-120b`
+    was the strongest general model listed by `GET /models`. Override with `LLM_MODEL`.
