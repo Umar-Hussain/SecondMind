@@ -42,3 +42,9 @@ def test_briefing_end_to_end(db) -> None:
     for x in briefing.extra_lines:
         assert not x.in_repertoire and x.final_eval_cp >= 0 and len(x.moves) <= 16
         assert verify.verify_line(x.start_fen or chess.STARTING_FEN, x.moves).ok
+    # The novelty is a move for the player, i.e. the side opposite the opponent in their top line.
+    if briefing.novelty:
+        player = chess.BLACK if briefing.likely_openings[0]["color"] == "white" else chess.WHITE
+        assert chess.Board(briefing.novelty["fen"]).turn == player
+        assert verify.is_legal(briefing.novelty["fen"], briefing.novelty["move"])
+    assert len(briefing.key_ideas) == len(set(briefing.key_ideas))

@@ -82,16 +82,25 @@ def prepare(session: Session, user_id: int, opponent: str, platform: str = "lich
 
     novelty = None
     if repeated:
+        # The novelty is a move for the *player*: stop in the opponent's favourite line at the
+        # first position (from move 3 on) where the player is to move.
+        line = repeated[0]["moves"]
+        player = chess.WHITE if repeated[0]["color"] == "black" else chess.BLACK
         board = chess.Board()
-        for u in repeated[0]["moves"][:6]:
+        for u in line:
+            if len(board.move_stack) >= 5 and board.turn == player:
+                break
             board.push_uci(u)
-        novelty = prep_lines.find_novelty(board.fen(), depth=depth)
+        if board.turn == player and not board.is_game_over():
+            novelty = prep_lines.find_novelty(board.fen(), depth=depth)
 
-    ideas = []
+    ideas: list[str] = []
     for r in repeated[:2]:
         docs = rag.retrieve(" ".join(r["moves_san"]) + " plan", k=1)
         if docs:
-            ideas.append(f"{docs[0].citation.title} [{docs[0].id}]")
+            idea = f"{docs[0].citation.title} [{docs[0].id}]"
+            if idea not in ideas:
+                ideas.append(idea)
     briefing = Briefing(opponent=opponent, likely_openings=likely, recommended_replies=replies[:8],
                         extra_lines=extra, key_ideas=ideas, risks=risks, novelty=novelty,
                         citations=[c for x in extra for c in x.master_games])
