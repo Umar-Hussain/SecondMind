@@ -1,6 +1,7 @@
 """Deploy SecondMind to a Hugging Face Space (Docker SDK, free CPU hardware).
 
-    hf auth login                      # once, with your own write token (you type it, not this script)
+    hf auth login                      # once, with your own write token
+    # ...or put HF_TOKEN=<write token> in .env (git-ignored; used only to talk to Hugging Face)
     python scripts/deploy_hf.py                        # -> DaniilDubov/secondmind
     python scripts/deploy_hf.py --space me/my-space
 
@@ -48,11 +49,12 @@ def main() -> None:
     ap.add_argument("--private", action="store_true", help="create the Space as private")
     args = ap.parse_args()
 
-    api = HfApi()
+    env = read_env()
+    # Token from `hf auth login`, or from HF_TOKEN in the git-ignored .env (never uploaded).
+    api = HfApi(token=env.get("HF_TOKEN") or None)
     print(f"Logged in as {api.whoami()['name']}")
     api.create_repo(args.space, repo_type="space", space_sdk="docker", private=args.private, exist_ok=True)
 
-    env = read_env()
     if not env.get("SECRET_KEY"):
         # A fixed signing key keeps people logged in across Space restarts.
         import secrets as _secrets
