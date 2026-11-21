@@ -435,11 +435,13 @@ def eval_llm(runs: int) -> dict:
                     continue
                 text = " ".join([out.explanation, out.plan, out.memory_aid])
                 board = chess.Board(lk.fen)
+                allowed_norm = {verify._norm(a) for a in facts.allowed_moves}
                 for m in verify.extract_moves(text):
                     moves_total += 1
-                    if verify.parse_move(board, m) is None and m not in facts.allowed_moves:
-                        illegal += 1
-                    if m.rstrip("+#") not in facts.allowed_moves:
+                    known = verify._norm(m) in allowed_norm
+                    if not known and verify.parse_move(board, m) is None:
+                        illegal += 1  # neither supplied by a tool nor even legal in the position
+                    if not known:
                         unverified += 1
                 ids = set(out.citations) | set(verify.cited_ids(text))
                 cites_total += len(ids)
@@ -477,7 +479,9 @@ def main() -> None:
     ap.add_argument("--only", nargs="*", default=["retrieval", "gambit", "recommender", "guard", "deviations", "llm"])
     ap.add_argument("--runs", type=int, default=3)
     args = ap.parse_args()
-    out: dict = {}
+    # Partial runs (--only ...) update the previous results instead of replacing them.
+    prev = RESULTS / "summary.json"
+    out: dict = json.loads(prev.read_text(encoding="utf-8")) if prev.exists() else {}
     for comp in args.only:
         t = time.perf_counter()
         print(f"== {comp} ...", flush=True)

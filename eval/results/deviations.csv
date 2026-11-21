@@ -1,0 +1,10 @@
+played_san,repertoire_san,recommended_san,recommended_source,classification,games_count,avg_eval_loss
+Bc4,Bb5,Bb5,repertoire,harmless,5,0.0
+Nxe5,Ba4,Ba4,repertoire,mistake,3,644.0
+e5,Nc3,Nc3,repertoire,mistake,2,227.0
+f4,Nf3,Nf3,repertoire,harmless,2,76.0
+d4,Nf3,Nf3,repertoire,harmless,1,28.0
+d4,Nf3,Nf3,repertoire,harmless,1,20.0
+d4,e4,e4,repertoire,harmless,1,12.0
+Bg4,e6,e6,repertoire,inaccuracy,2,37.0
+e5,d5,d5,repertoire,harmless,1,117.0

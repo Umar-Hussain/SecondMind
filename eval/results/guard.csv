@@ -1,0 +1,61 @@
+type,is_bad,guard,baseline,latency_ms,text
+clean,False,False,False,0.125,Nxe5 drops material; play Ba4 instead [idea-ruy-morphy].
+legal but unverified move,True,True,False,0.031,"Better is e6, then Nc3 [idea-ruy-morphy]."
+illegal move,True,True,True,0.028,Play Nc3 and later Qh7xg8 or Nb9 [idea-ruy-morphy].
+fake citation,True,True,False,0.027,Bxa6 loses; Ba4 is the main line [idea-invented-source].
+"clean, no cite",False,False,False,0.02,After Qd2 the plan with Bd2 is standard.
+clean,False,False,False,0.021,Qe2 drops material; play O-O instead [idea-ruy-morphy].
+legal but unverified move,True,True,False,0.024,"Better is f4, then Ba4 [idea-ruy-morphy]."
+illegal move,True,True,True,0.025,Play e6 and later Qh7xg8 or Nb9 [idea-ruy-morphy].
+fake citation,True,True,False,0.026,Nxe5 loses; Ba4 is the main line [idea-invented-source].
+"clean, no cite",False,False,False,0.019,After Bc3 the plan with Nc3 is standard.
+clean,False,False,False,0.02,e5 drops material; play Nc3 instead [idea-ruy-morphy].
+legal but unverified move,True,True,False,0.022,"Better is h3, then Ba4 [idea-ruy-morphy]."
+illegal move,True,True,True,0.022,Play Bd2 and later Qh7xg8 or Nb9 [idea-ruy-morphy].
+fake citation,True,True,False,0.024,Qe2 loses; O-O is the main line [idea-invented-source].
+"clean, no cite",False,False,False,0.018,After d4 the plan with Ba4 is standard.
+clean,False,False,False,0.02,Bg4 drops material; play e6 instead [idea-ruy-morphy].
+legal but unverified move,True,True,False,0.022,"Better is c4, then Ba4 [idea-ruy-morphy]."
+illegal move,True,True,True,0.022,Play Nc3 and later Qh7xg8 or Nb9 [idea-ruy-morphy].
+fake citation,True,True,False,0.023,e5 loses; Nc3 is the main line [idea-invented-source].
+"clean, no cite",False,False,False,0.018,After Bxa6 the plan with Ba4 is standard.
+clean,False,False,False,0.02,Qd2 drops material; play Bd2 instead [idea-ruy-morphy].
+legal but unverified move,True,True,False,0.022,"Better is d4, then O-O [idea-ruy-morphy]."
+illegal move,True,True,True,0.023,Play Ba4 and later Qh7xg8 or Nb9 [idea-ruy-morphy].
+fake citation,True,True,False,0.024,Bg4 loses; e6 is the main line [idea-invented-source].
+"clean, no cite",False,False,False,0.018,After Nxe5 the plan with Ba4 is standard.
+clean,False,False,False,0.02,Bc3 drops material; play Nc3 instead [idea-ruy-morphy].
+legal but unverified move,True,True,False,0.022,"Better is h3, then Nc3 [idea-ruy-morphy]."
+illegal move,True,True,True,0.022,Play Ba4 and later Qh7xg8 or Nb9 [idea-ruy-morphy].
+fake citation,True,True,False,0.023,Qd2 loses; Bd2 is the main line [idea-invented-source].
+"clean, no cite",False,False,False,0.018,After Qe2 the plan with O-O is standard.
+clean,False,False,False,0.02,d4 drops material; play Ba4 instead [idea-ruy-morphy].
+legal but unverified move,True,True,False,0.021,"Better is Bh3, then e6 [idea-ruy-morphy]."
+illegal move,True,True,True,0.022,Play Ba4 and later Qh7xg8 or Nb9 [idea-ruy-morphy].
+fake citation,True,True,False,0.022,Bc3 loses; Nc3 is the main line [idea-invented-source].
+"clean, no cite",False,False,False,0.018,After e5 the plan with Nc3 is standard.
+clean,False,False,False,0.02,Bxa6 drops material; play Ba4 instead [idea-ruy-morphy].
+legal but unverified move,True,True,False,0.022,"Better is g3, then Bd2 [idea-ruy-morphy]."
+illegal move,True,True,True,0.029,Play O-O and later Qh7xg8 or Nb9 [idea-ruy-morphy].
+fake citation,True,True,False,0.022,d4 loses; Ba4 is the main line [idea-invented-source].
+"clean, no cite",False,False,False,0.018,After Bg4 the plan with e6 is standard.
+clean,False,False,False,0.02,Nxe5 drops material; play Ba4 instead [idea-ruy-morphy].
+legal but unverified move,True,True,False,0.021,"Better is Ba5, then Nc3 [idea-ruy-morphy]."
+illegal move,True,True,True,0.021,Play Nc3 and later Qh7xg8 or Nb9 [idea-ruy-morphy].
+fake citation,True,True,False,0.022,Bxa6 loses; Ba4 is the main line [idea-invented-source].
+"clean, no cite",False,False,False,0.017,After Qd2 the plan with Bd2 is standard.
+clean,False,False,False,0.019,Qe2 drops material; play O-O instead [idea-ruy-morphy].
+legal but unverified move,True,True,False,0.021,"Better is Be2, then Ba4 [idea-ruy-morphy]."
+illegal move,True,True,True,0.021,Play e6 and later Qh7xg8 or Nb9 [idea-ruy-morphy].
+fake citation,True,True,False,0.022,Nxe5 loses; Ba4 is the main line [idea-invented-source].
+"clean, no cite",False,False,False,0.018,After Bc3 the plan with Nc3 is standard.
+clean,False,False,False,0.019,e5 drops material; play Nc3 instead [idea-ruy-morphy].
+legal but unverified move,True,True,False,0.021,"Better is g4, then Ba4 [idea-ruy-morphy]."
+illegal move,True,True,True,0.022,Play Bd2 and later Qh7xg8 or Nb9 [idea-ruy-morphy].
+fake citation,True,True,False,0.022,Qe2 loses; O-O is the main line [idea-invented-source].
+"clean, no cite",False,False,False,0.018,After d4 the plan with Ba4 is standard.
+clean,False,False,False,0.019,Bg4 drops material; play e6 instead [idea-ruy-morphy].
+legal but unverified move,True,True,False,0.021,"Better is Na3, then Ba4 [idea-ruy-morphy]."
+illegal move,True,True,True,0.021,Play Nc3 and later Qh7xg8 or Nb9 [idea-ruy-morphy].
+fake citation,True,True,False,0.022,e5 loses; Nc3 is the main line [idea-invented-source].
+"clean, no cite",False,False,False,0.017,After Bxa6 the plan with Ba4 is standard.

@@ -1,0 +1,380 @@
+{
+ "retrieval": {
+  "rows": [
+   {
+    "system": "hybrid+eco",
+    "n": 50,
+    "recall@1": 0.96,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "mrr": 0.98,
+    "latency_ms_median": 0.5,
+    "latency_ms_p95": 0.6
+   },
+   {
+    "system": "hybrid",
+    "n": 50,
+    "recall@1": 0.88,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "mrr": 0.937,
+    "latency_ms_median": 0.5,
+    "latency_ms_p95": 0.6
+   },
+   {
+    "system": "dense+eco",
+    "n": 50,
+    "recall@1": 0.98,
+    "recall@3": 0.98,
+    "recall@5": 1.0,
+    "mrr": 0.985,
+    "latency_ms_median": 0.4,
+    "latency_ms_p95": 0.4
+   },
+   {
+    "system": "dense",
+    "n": 50,
+    "recall@1": 0.9,
+    "recall@3": 1.0,
+    "recall@5": 1.0,
+    "mrr": 0.94,
+    "latency_ms_median": 0.4,
+    "latency_ms_p95": 0.4
+   },
+   {
+    "system": "bm25+eco",
+    "n": 50,
+    "recall@1": 0.94,
+    "recall@3": 0.98,
+    "recall@5": 1.0,
+    "mrr": 0.965,
+    "latency_ms_median": 0.1,
+    "latency_ms_p95": 0.2
+   },
+   {
+    "system": "bm25",
+    "n": 50,
+    "recall@1": 0.9,
+    "recall@3": 0.98,
+    "recall@5": 0.98,
+    "mrr": 0.933,
+    "latency_ms_median": 0.1,
+    "latency_ms_p95": 0.1
+   }
+  ],
+  "failures": [
+   {
+    "system": "hybrid+eco",
+    "query": "Famous attacking game in the bishop's gambit with many sacrifices",
+    "gold": "game-001-C33",
+    "rank": 2,
+    "got": "idea-kings-gambit|game-001-C33|idea-italian-giuoco"
+   },
+   {
+    "system": "hybrid+eco",
+    "query": "Is the Queen's Gambit a real gambit?",
+    "gold": "idea-qgd",
+    "rank": 2,
+    "got": "idea-blackmar-diemer|idea-qgd|idea-kings-gambit"
+   },
+   {
+    "system": "hybrid",
+    "query": "What is White's usual plan after 4.Ba4 Nf6 5.O-O in the Spanish?",
+    "gold": "idea-ruy-morphy",
+    "rank": 2,
+    "got": "idea-kings-gambit|idea-ruy-morphy|idea-ruy-exchange"
+   },
+   {
+    "system": "hybrid",
+    "query": "Should I trade my bishop for the knight on c6 in the Ruy Lopez?",
+    "gold": "idea-ruy-exchange",
+    "rank": 2,
+    "got": "idea-ruy-morphy|idea-ruy-exchange|idea-italian-giuoco"
+   },
+   {
+    "system": "hybrid",
+    "query": "Why does White sacrifice the b4 pawn against the bishop on c5?",
+    "gold": "idea-evans|game-002-C52",
+    "rank": 2,
+    "got": "idea-ruy-morphy|idea-evans|idea-caro-advance"
+   },
+   {
+    "system": "hybrid",
+    "query": "White pushes h4 against my bishop on f5, how do I respond?",
+    "gold": "idea-caro-bayonet",
+    "rank": 2,
+    "got": "idea-slav|idea-caro-bayonet|idea-sicilian-open"
+   },
+   {
+    "system": "hybrid",
+    "query": "Famous attacking game in the bishop's gambit with many sacrifices",
+    "gold": "game-001-C33",
+    "rank": 2,
+    "got": "idea-kings-gambit|game-001-C33|idea-italian-giuoco"
+   },
+   {
+    "system": "hybrid",
+    "query": "Short brilliant game where Morphy sacrifices on b5 and mates on d8",
+    "gold": "game-003-C41",
+    "rank": 3,
+    "got": "idea-ruy-morphy|idea-two-knights|game-003-C41"
+   },
+   {
+    "system": "dense+eco",
+    "query": "Is the Queen's Gambit a real gambit?",
+    "gold": "idea-qgd",
+    "rank": 4,
+    "got": "idea-blackmar-diemer|idea-london|idea-slav"
+   },
+   {
+    "system": "dense",
+    "query": "What is White's usual plan after 4.Ba4 Nf6 5.O-O in the Spanish?",
+    "gold": "idea-ruy-morphy",
+    "rank": 2,
+    "got": "idea-kings-gambit|idea-ruy-morphy|idea-evans"
+   },
+   {
+    "system": "dense",
+    "query": "Should I trade my bishop for the knight on c6 in the Ruy Lopez?",
+    "gold": "idea-ruy-exchange",
+    "rank": 2,
+    "got": "idea-ruy-morphy|idea-ruy-exchange|idea-italian-giuoco"
+   },
+   {
+    "system": "dense",
+    "query": "Why does White sacrifice the b4 pawn against the bishop on c5?",
+    "gold": "idea-evans|game-002-C52",
+    "rank": 3,
+    "got": "idea-ruy-morphy|idea-caro-advance|idea-evans"
+   },
+   {
+    "system": "dense",
+    "query": "White pushes h4 against my bishop on f5, how do I respond?",
+    "gold": "idea-caro-bayonet",
+    "rank": 3,
+    "got": "idea-ruy-morphy|idea-french-advance|idea-caro-bayonet"
+   },
+   {
+    "system": "dense",
+    "query": "Short brilliant game where Morphy sacrifices on b5 and mates on d8",
+    "gold": "game-003-C41",
+    "rank": 3,
+    "got": "idea-ruy-morphy|idea-two-knights|game-003-C41"
+   },
+   {
+    "system": "bm25+eco",
+    "query": "Is moving the bishop again to g4 a good idea in the Caro advance?",
+    "gold": "idea-caro-advance",
+    "rank": 2,
+    "got": "idea-caro-bayonet|idea-caro-advance|idea-caro-classical"
+   },
+   {
+    "system": "bm25+eco",
+    "query": "Famous attacking game in the bishop's gambit with many sacrifices",
+    "gold": "game-001-C33",
+    "rank": 2,
+    "got": "idea-kings-gambit|game-001-C33|game-003-C41"
+   },
+   {
+    "system": "bm25+eco",
+    "query": "Is the Queen's Gambit a real gambit?",
+    "gold": "idea-qgd",
+    "rank": 4,
+    "got": "idea-blackmar-diemer|idea-london|idea-slav"
+   },
+   {
+    "system": "bm25",
+    "query": "Is moving the bishop again to g4 a good idea in the Caro advance?",
+    "gold": "idea-caro-advance",
+    "rank": 2,
+    "got": "idea-caro-bayonet|idea-caro-advance|idea-general-tempo"
+   },
+   {
+    "system": "bm25",
+    "query": "White pushes h4 against my bishop on f5, how do I respond?",
+    "gold": "idea-caro-bayonet",
+    "rank": 3,
+    "got": "idea-slav|idea-sicilian-open|idea-caro-bayonet"
+   },
+   {
+    "system": "bm25",
+    "query": "Famous attacking game in the bishop's gambit with many sacrifices",
+    "gold": "game-001-C33",
+    "rank": null,
+    "got": "idea-kings-gambit|idea-french-advance|idea-two-knights"
+   },
+   {
+    "system": "bm25",
+    "query": "Blackmar Diemer f3 gambit plans with Qe1 Qh4",
+    "gold": "idea-blackmar-diemer",
+    "rank": 2,
+    "got": "idea-najdorf-english|idea-blackmar-diemer|game-001-C33"
+   },
+   {
+    "system": "bm25",
+    "query": "Short brilliant game where Morphy sacrifices on b5 and mates on d8",
+    "gold": "game-003-C41",
+    "rank": 3,
+    "got": "idea-ruy-morphy|idea-two-knights|game-003-C41"
+   }
+  ]
+ },
+ "gambit": {
+  "summary": {
+   "cases": 89,
+   "detection_accuracy": 1.0,
+   "player_moves_in_gambit_theory": 256,
+   "false_positive_rate_system": 0.0,
+   "false_positive_rate_naive_baseline": 0.086,
+   "deviation_detection_rate": 1.0,
+   "latency_ms_median": 1.3,
+   "latency_ms_p95": 3.4
+  },
+  "errors": []
+ },
+ "recommender": {
+  "summary": {
+   "positions": 50,
+   "soundness_within_30cp": 0.96,
+   "share_master_choice": 0.54,
+   "verified_rate": 0.98,
+   "avg_loss_chosen_cp": 6.8,
+   "baseline_always_popular_soundness": 0.963,
+   "baseline_avg_loss_popular_cp": 7.3,
+   "latency_ms_median": 1.0,
+   "latency_ms_p95": 1.3
+  },
+  "errors": [
+   {
+    "fen": "r1bqkbnr/pppp1ppp/2n5/4P3/8/5N2/PPP1PPPP/RNBQKB1R b KQkq - 2 3",
+    "chosen": "Qe7",
+    "source": "master",
+    "loss_at_ref_depth": 65,
+    "reason": "Qe7: played in 100% of 100 master games (eco-book), 19 cp from the best engine move"
+   },
+   {
+    "fen": "rnbqkb1r/pp2pppp/5n2/4p3/3N4/8/PPP2PPP/RNBQKB1R w KQkq - 0 6",
+    "chosen": "Nf3",
+    "source": "engine",
+    "loss_at_ref_depth": 67,
+    "reason": "Nf3: Stockfish best; fewer than 50 master games in this position"
+   }
+  ]
+ },
+ "guard": {
+  "summary": {
+   "cases": 60,
+   "guard": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   "baseline_legality_only": {
+    "precision": 1.0,
+    "recall": 0.333,
+    "f1": 0.5
+   },
+   "by_type": {
+    "clean": {
+     "n": 12,
+     "guard_flag_rate": 0.0,
+     "baseline_flag_rate": 0.0
+    },
+    "clean, no cite": {
+     "n": 12,
+     "guard_flag_rate": 0.0,
+     "baseline_flag_rate": 0.0
+    },
+    "fake citation": {
+     "n": 12,
+     "guard_flag_rate": 1.0,
+     "baseline_flag_rate": 0.0
+    },
+    "illegal move": {
+     "n": 12,
+     "guard_flag_rate": 1.0,
+     "baseline_flag_rate": 1.0
+    },
+    "legal but unverified move": {
+     "n": 12,
+     "guard_flag_rate": 1.0,
+     "baseline_flag_rate": 0.0
+    }
+   },
+   "latency_ms_median": 0.0
+  },
+  "errors": []
+ },
+ "deviations": {
+  "summary": {
+   "white_deviation_groups": 7,
+   "gold_groups": 5,
+   "recall": 1.0,
+   "precision": 1.0,
+   "ranking_by_game_count_correct": true,
+   "in_book_false_positives": 0,
+   "uncovered_white": [
+    [
+     "Nf6",
+     1
+    ],
+    [
+     "d5",
+     3
+    ]
+   ],
+   "uncovered_recall": 1.0,
+   "black_deviations": [
+    [
+     "Bg4",
+     2,
+     "inaccuracy"
+    ],
+    [
+     "e5",
+     1,
+     "harmless"
+    ]
+   ],
+   "black_uncovered": [
+    [
+     "exd5",
+     1
+    ]
+   ],
+   "classifications_white": {
+    "Bc40": "harmless",
+    "Nxe51": "mistake",
+    "e52": "mistake",
+    "f43": "harmless",
+    "d44": "harmless",
+    "d45": "harmless",
+    "d46": "harmless"
+   },
+   "latency_ms_total": 52.3
+  }
+ },
+ "llm": {
+  "rows": [
+   {
+    "condition": "0_template",
+    "run": 1,
+    "items": 10,
+    "moves_mentioned": 36,
+    "illegal_move_rate": 0.0,
+    "unverified_move_rate": 0.0,
+    "citation_validity": 1.0,
+    "latency_ms_median": 0.0,
+    "latency_ms_p95": 0.0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd_per_report": 0.0
+   }
+  ],
+  "skipped": [
+   "A",
+   "B",
+   "C (no ANTHROPIC_API_KEY)"
+  ]
+ }
+}

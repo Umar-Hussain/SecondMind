@@ -1,0 +1,23 @@
+system,query,gold,rank,got
+hybrid+eco,Famous attacking game in the bishop's gambit with many sacrifices,game-001-C33,2,idea-kings-gambit|game-001-C33|idea-italian-giuoco
+hybrid+eco,Is the Queen's Gambit a real gambit?,idea-qgd,2,idea-blackmar-diemer|idea-qgd|idea-kings-gambit
+hybrid,What is White's usual plan after 4.Ba4 Nf6 5.O-O in the Spanish?,idea-ruy-morphy,2,idea-kings-gambit|idea-ruy-morphy|idea-ruy-exchange
+hybrid,Should I trade my bishop for the knight on c6 in the Ruy Lopez?,idea-ruy-exchange,2,idea-ruy-morphy|idea-ruy-exchange|idea-italian-giuoco
+hybrid,Why does White sacrifice the b4 pawn against the bishop on c5?,idea-evans|game-002-C52,2,idea-ruy-morphy|idea-evans|idea-caro-advance
+hybrid,"White pushes h4 against my bishop on f5, how do I respond?",idea-caro-bayonet,2,idea-slav|idea-caro-bayonet|idea-sicilian-open
+hybrid,Famous attacking game in the bishop's gambit with many sacrifices,game-001-C33,2,idea-kings-gambit|game-001-C33|idea-italian-giuoco
+hybrid,Short brilliant game where Morphy sacrifices on b5 and mates on d8,game-003-C41,3,idea-ruy-morphy|idea-two-knights|game-003-C41
+dense+eco,Is the Queen's Gambit a real gambit?,idea-qgd,4,idea-blackmar-diemer|idea-london|idea-slav
+dense,What is White's usual plan after 4.Ba4 Nf6 5.O-O in the Spanish?,idea-ruy-morphy,2,idea-kings-gambit|idea-ruy-morphy|idea-evans
+dense,Should I trade my bishop for the knight on c6 in the Ruy Lopez?,idea-ruy-exchange,2,idea-ruy-morphy|idea-ruy-exchange|idea-italian-giuoco
+dense,Why does White sacrifice the b4 pawn against the bishop on c5?,idea-evans|game-002-C52,3,idea-ruy-morphy|idea-caro-advance|idea-evans
+dense,"White pushes h4 against my bishop on f5, how do I respond?",idea-caro-bayonet,3,idea-ruy-morphy|idea-french-advance|idea-caro-bayonet
+dense,Short brilliant game where Morphy sacrifices on b5 and mates on d8,game-003-C41,3,idea-ruy-morphy|idea-two-knights|game-003-C41
+bm25+eco,Is moving the bishop again to g4 a good idea in the Caro advance?,idea-caro-advance,2,idea-caro-bayonet|idea-caro-advance|idea-caro-classical
+bm25+eco,Famous attacking game in the bishop's gambit with many sacrifices,game-001-C33,2,idea-kings-gambit|game-001-C33|game-003-C41
+bm25+eco,Is the Queen's Gambit a real gambit?,idea-qgd,4,idea-blackmar-diemer|idea-london|idea-slav
+bm25,Is moving the bishop again to g4 a good idea in the Caro advance?,idea-caro-advance,2,idea-caro-bayonet|idea-caro-advance|idea-general-tempo
+bm25,"White pushes h4 against my bishop on f5, how do I respond?",idea-caro-bayonet,3,idea-slav|idea-sicilian-open|idea-caro-bayonet
+bm25,Famous attacking game in the bishop's gambit with many sacrifices,game-001-C33,,idea-kings-gambit|idea-french-advance|idea-two-knights
+bm25,Blackmar Diemer f3 gambit plans with Qe1 Qh4,idea-blackmar-diemer,2,idea-najdorf-english|idea-blackmar-diemer|game-001-C33
+bm25,Short brilliant game where Morphy sacrifices on b5 and mates on d8,game-003-C41,3,idea-ruy-morphy|idea-two-knights|game-003-C41
