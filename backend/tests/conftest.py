@@ -17,6 +17,9 @@ from sqlalchemy import create_engine
 # Tests always run offline against fixtures and without the LLM.
 os.environ.setdefault("OFFLINE", "1")
 os.environ["ANTHROPIC_API_KEY"] = ""
+# Never call a real provider from tests, even when .env holds a Groq key.
+os.environ["LLM_API_KEY"] = ""
+os.environ["LLM_PROVIDER"] = "groq"
 # The global session (used by the run log and the API) points at a throwaway file.
 import tempfile  # noqa: E402
 
