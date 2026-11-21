@@ -162,3 +162,57 @@ def build_gap_report(leaks: list[LeakOut], mode: str = "full", depth: int | None
     items = [build_item(lk, mode, depth, rating) for lk in real + notes]
     by_llm = mode != "template" and client.is_available()
     return GapReport(leaks=items, generated_by="llm" if by_llm else "template")
+
+
+# ---------------------------------------------------------------------------
+# Deviation detail view (spec 8.8 "Detail view")
+# ---------------------------------------------------------------------------
+
+
+def explain_deviation(dev, opening: str = "", eco: str | None = None, rating: int | None = None,
+                      depth: int | None = None) -> tuple[LeakExplanation, list[RetrievedDoc], str]:
+    """Guarded explanation of one repertoire deviation (template when the LLM is off or fails the guard)."""
+    board = chess.Board(dev.node_fen if len(dev.node_fen.split()) >= 6 else dev.node_fen + " 0 1")
+    fen = board.fen()
+    allowed = verify.allowed_moves_for(fen, [m for m in (dev.played_move, dev.repertoire_move,
+                                                         dev.recommended_move) if m])
+    after = board.copy()
+    after.push_uci(dev.played_move)
+    refutation: list[str] = []
+    if not after.is_game_over():
+        top = engine.evaluate(after.fen(), depth=depth)
+        refutation = top.lines[0].pv_san[:4]
+        allowed |= verify.allowed_line(after.fen(), top.lines[0].pv_uci[:4])
+    docs = rag.retrieve(f"{opening} {dev.played_san} {dev.repertoire_san} {dev.recommended_san} plan", eco=eco, k=4)
+    facts = {"opening": opening, "classification": dev.classification, "played_san": dev.played_san,
+             "repertoire_san": dev.repertoire_san, "recommended_san": dev.recommended_san,
+             "recommended_source": dev.recommended_source, "reason": dev.reason, "games": dev.games_count,
+             "results": dev.results, "avg_loss_pawns": round(dev.avg_eval_loss / 100, 2),
+             "engine_line_after_played": refutation}
+
+    def template() -> LeakExplanation:
+        verdict = {"mistake": "loses ground", "inaccuracy": "is slightly worse", "harmless": "is about equal",
+                   "better": "is actually better"}.get(dev.classification, "differs")
+        text = (f"In {dev.games_count} game(s) you played {dev.played_san} instead of your repertoire move "
+                f"{dev.repertoire_san}; Stockfish says it {verdict} ({dev.avg_eval_loss / 100:.2f} pawns).")
+        plan = f"Recommended: {dev.recommended_san} ({dev.recommended_source}). {dev.reason}"
+        if docs:
+            plan += f" See {docs[0].citation.title} [{docs[0].id}]."
+        return LeakExplanation(explanation=text, plan=plan, citations=[docs[0].id] if docs else [])
+
+    if not client.is_available():
+        return template(), docs, "template"
+
+    def check(o: LeakExplanation) -> list[str]:
+        text = " ".join([o.explanation, o.plan, o.memory_aid])
+        return (verify.verify_text_moves(text, allowed).reasons + verify.verify_citations(o.citations, docs).reasons
+                + verify.verify_citations(text, docs).reasons)
+
+    prompt = prompts.deviation_explanation(facts, [{"id": d.id, "title": d.citation.title, "text": d.text}
+                                                   for d in docs])
+    try:
+        out = client.generate_structured(prompt, LeakExplanation, system=prompts.system_prompt(rating),
+                                         name="deviation_explanation", max_retries=1, extra_check=check)
+        return out, docs, "llm"
+    except (ValueError, client.LLMRefused):
+        return template(), docs, "template"
