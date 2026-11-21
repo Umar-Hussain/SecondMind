@@ -150,3 +150,38 @@ def test_admin_bootstrap_is_idempotent(admin_headers) -> None:
             assert first.id == again.id
     finally:
         s.admin_username, s.admin_password = "", ""
+
+
+# --- Search ----------------------------------------------------------------------
+
+
+def test_library_search(api, admin_headers) -> None:
+    white = api.post("/library", headers=admin_headers,
+                     json={"name": "Search test white", "color": "white", "pgn": WHITE_PGN,
+                           "description": "solid e4 starter"}).json()["id"]
+    black = api.post("/library", headers=admin_headers,
+                     json={"name": "Search test black", "color": "black",
+                           "pgn": (FIXTURES_DIR / "repertoire_black.pgn").read_text()}).json()["id"]
+    user = _signup(api, "erin_x")
+
+    def ids(q: str) -> set[int]:
+        return {r["id"] for r in api.get("/library", headers=user, params={"q": q}).json()} & {white, black}
+
+    assert ids("") == {white, black}
+    assert ids("solid starter") == {white}                 # words in the description
+    assert ids("caro advance") == {black, white}           # opening names inside both trees
+    assert ids("najdorf") == set()                         # neither repertoire reaches the Najdorf
+    assert ids("B12") == {black, white}                    # ECO code
+    assert ids("1.e4 c6 2.d4 d5 3.e5") == {black, white}   # a move sequence both contain
+    assert ids("e4 c6 Nc3 d5 d4") == {black}               # transposition into the black tree
+    assert ids("1.e4 d5") == set()                         # Scandinavian: in neither
+    res = api.get("/library", headers=user, params={"q": "e4 e5 Nf3"}).json()
+    hit = next(r for r in res if r["id"] == white)
+    assert hit["match"] == "contains e4 e5 Nf3"
+
+
+def test_my_repertoires_search(api) -> None:
+    user = _signup(api, "frank_x")
+    api.post("/repertoires", headers=user, json={"name": "Ruy main", "color": "white", "pgn": WHITE_PGN})
+    assert len(api.get("/repertoires", headers=user, params={"q": "ruy"}).json()) == 1
+    assert api.get("/repertoires", headers=user, params={"q": "dutch"}).json() == []
