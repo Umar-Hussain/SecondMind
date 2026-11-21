@@ -39,6 +39,9 @@ def db() -> Iterator[Session]:
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+    from app.db import enforce_sqlite_foreign_keys
+
+    enforce_sqlite_foreign_keys(engine)  # behave like Postgres
     Base.metadata.create_all(engine)
     session = sessionmaker(bind=engine, expire_on_commit=False)()
     try:
