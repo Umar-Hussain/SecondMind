@@ -30,9 +30,17 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # --- External services -------------------------------------------------
+    # --- LLM provider ------------------------------------------------------
+    # "groq" (free tier, default), "ollama" (free, local), "openai_compat" (any
+    # OpenAI-style endpoint via LLM_BASE_URL), or "anthropic" (Claude, paid).
+    llm_provider: str = "groq"
+    llm_api_key: str = ""
+    llm_base_url: str = ""  # empty = the provider's default URL
+    llm_model: str = ""  # empty = the provider's default model
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-opus-5-5"
+
+    # --- External services -------------------------------------------------
     lichess_token: str = ""
     chesscom_contact_email: str = ""
 
@@ -70,8 +78,27 @@ class Settings(BaseSettings):
 
     @property
     def llm_enabled(self) -> bool:
-        """The LLM layer is active only when an API key is configured."""
-        return bool(self.anthropic_api_key)
+        """The LLM layer is active only when its provider is usable.
+
+        Hosted providers need a key; a local Ollama server needs none.
+        """
+        provider = self.llm_provider.lower()
+        if provider == "anthropic":
+            return bool(self.anthropic_api_key)
+        if provider == "ollama":
+            return True
+        return bool(self.llm_api_key)
+
+    @property
+    def llm_settings(self) -> tuple[str, str, str]:
+        """(base_url, model, api_key) for OpenAI-compatible providers, with defaults per provider."""
+        defaults = {
+            "groq": ("https://api.groq.com/openai/v1", "openai/gpt-oss-120b"),
+            "ollama": ("http://localhost:11434/v1", "qwen2.5:7b"),
+            "openai_compat": ("", ""),
+        }
+        url, model = defaults.get(self.llm_provider.lower(), ("", ""))
+        return (self.llm_base_url or url).rstrip("/"), self.llm_model or model, self.llm_api_key
 
 
 @lru_cache
