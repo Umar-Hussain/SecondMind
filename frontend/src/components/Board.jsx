@@ -2,12 +2,25 @@ import { useEffect, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 
+// Lichess "brown" board colours.
+const LIGHT = { backgroundColor: "#f0d9b5" };
+const DARK = { backgroundColor: "#b58863" };
+
 // Interactive board. Moves are validated client-side with chess.js; the parent
-// gets the new FEN (explore mode) or the attempted move (quiz mode).
-export default function Board({ fen, orientation = "white", arrows = [], onMove, explore = true, width = 420 }) {
+// gets the attempted move. In explore mode the board also keeps its own position
+// so the user can try lines without changing the parent state.
+export default function Board({ fen, orientation = "white", arrows = [], onMove, explore = true, width, highlight }) {
   const [position, setPosition] = useState(fen);
+  const [size, setSize] = useState(width || 440);
 
   useEffect(() => setPosition(fen), [fen]);
+  useEffect(() => {
+    if (width) return undefined;
+    const fit = () => setSize(Math.max(280, Math.min(520, window.innerWidth - 40)));
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [width]);
 
   function onDrop(from, to, piece) {
     const game = new Chess(position);
@@ -19,9 +32,13 @@ export default function Board({ fen, orientation = "white", arrows = [], onMove,
       return false; // illegal move: chess.js throws, the piece snaps back
     }
     if (explore) setPosition(game.fen());
-    onMove && onMove({ uci: move.from + move.to + (move.promotion || ""), san: move.san, fen: game.fen() });
+    onMove && onMove({ uci: move.from + move.to + (move.promotion || ""), san: move.san, fen: game.fen(), from: position });
     return true;
   }
+
+  const squareStyles = highlight
+    ? { [highlight.slice(0, 2)]: { background: "rgba(155,199,0,.41)" }, [highlight.slice(2, 4)]: { background: "rgba(155,199,0,.41)" } }
+    : {};
 
   return (
     <div className="board">
@@ -29,8 +46,12 @@ export default function Board({ fen, orientation = "white", arrows = [], onMove,
         position={position}
         onPieceDrop={onDrop}
         boardOrientation={orientation}
-        boardWidth={width}
+        boardWidth={size}
         customArrows={arrows}
+        customLightSquareStyle={LIGHT}
+        customDarkSquareStyle={DARK}
+        customSquareStyles={squareStyles}
+        customBoardStyle={{ borderRadius: "3px", boxShadow: "0 2px 12px rgba(0,0,0,.45)" }}
         animationDuration={150}
       />
       {explore && position !== fen && (
