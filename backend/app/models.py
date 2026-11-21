@@ -38,6 +38,11 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    # Login. Usernames are stored lower-case; passwords only as salted PBKDF2 hashes.
+    username: Mapped[str | None] = mapped_column(String(32), unique=True, index=True)
+    password_hash: Mapped[str | None] = mapped_column(String(200))
+    role: Mapped[str] = mapped_column(String(10), default="user")  # user | admin
+    display_name: Mapped[str | None] = mapped_column(String(64))
     lichess_username: Mapped[str | None] = mapped_column(String(64))
     chesscom_username: Mapped[str | None] = mapped_column(String(64))
     rating: Mapped[int | None] = mapped_column(Integer)
@@ -83,6 +88,10 @@ class Repertoire(Base):
     raw_pgn: Mapped[str] = mapped_column(Text, default="")
     intentional_gambit: Mapped[bool] = mapped_column(Boolean, default=False)
     status: Mapped[str] = mapped_column(String(16), default="active")  # active | draft
+    # Library repertoires are published by an admin; every user can view and copy them.
+    is_library: Mapped[bool] = mapped_column(Boolean, default=False)
+    description: Mapped[str] = mapped_column(Text, default="")
+    copied_from_id: Mapped[int | None] = mapped_column(Integer)  # library repertoire it was copied from
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
 

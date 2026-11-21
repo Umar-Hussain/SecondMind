@@ -35,7 +35,35 @@ def init_db(bind: Engine | None = None) -> None:
     """Create every table. Importing models registers them on ``Base``."""
     from app import models  # noqa: F401  (import for side effect)
 
-    Base.metadata.create_all(bind=bind or engine)
+    target = bind or engine
+    Base.metadata.create_all(bind=target)
+    _add_missing_columns(target)
+
+
+def _add_missing_columns(bind: Engine) -> None:
+    """Tiny additive migration: add columns introduced after a database was created.
+
+    ``create_all`` never alters existing tables, so an older ``repertoire.db`` would
+    miss new columns. Only *adding* nullable columns is supported, which is all this
+    project needs; constraints on new columns are not retrofitted.
+    """
+    from sqlalchemy import inspect, text
+
+    insp = inspect(bind)
+    with bind.begin() as conn:
+        for table in Base.metadata.sorted_tables:
+            if not insp.has_table(table.name):
+                continue
+            existing = {c["name"] for c in insp.get_columns(table.name)}
+            for col in table.columns:
+                if col.name in existing:
+                    continue
+                ddl_type = col.type.compile(dialect=bind.dialect)
+                default = ""
+                if col.default is not None and getattr(col.default, "is_scalar", False):
+                    value = col.default.arg
+                    default = f" DEFAULT {int(value) if isinstance(value, bool) else repr(value)}"
+                conn.execute(text(f'ALTER TABLE {table.name} ADD COLUMN "{col.name}" {ddl_type}{default}'))
 
 
 @contextmanager
