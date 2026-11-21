@@ -35,7 +35,6 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-opus-5-5"
     lichess_token: str = ""
     chesscom_contact_email: str = ""
-    telegram_bot_token: str = ""
 
     # --- Engine ------------------------------------------------------------
     stockfish_path: str = "engine/stockfish/stockfish-windows-x86-64-universal.exe"

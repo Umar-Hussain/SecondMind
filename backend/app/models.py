@@ -40,7 +40,6 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     lichess_username: Mapped[str | None] = mapped_column(String(64))
     chesscom_username: Mapped[str | None] = mapped_column(String(64))
-    telegram_chat_id: Mapped[str | None] = mapped_column(String(64))
     rating: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 

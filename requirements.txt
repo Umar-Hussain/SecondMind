@@ -11,6 +11,5 @@ numpy>=1.26
 scikit-learn>=1.4
 apscheduler>=3.10
 ics>=0.7
-python-telegram-bot>=21.0
 python-multipart>=0.0.9
 pytest>=8.0
