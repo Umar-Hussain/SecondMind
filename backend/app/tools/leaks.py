@@ -191,8 +191,9 @@ def gambit_notes(games: Iterable[NormalizedGame]) -> list[LeakOut]:
         if gdef is None:
             continue
         g = sample[gid]
+        # Position *before* the defining gambit move, so (fen, played) is a legal pair.
         board = chess.Board()
-        for u in gdef.trigger_uci:
+        for u in gdef.trigger_uci[:-1]:
             board.push_uci(u)
         notes.append(LeakOut(color=g.color, fen=board.fen(), played=gdef.trigger_uci[-1], kind="gambit_note",
                              ply=len(gdef.trigger_uci), frequency=sum(results.values()), games=[],
