@@ -1,0 +1,12 @@
+.git
+.env
+*.db
+*.log
+engine/
+frontend/node_modules
+frontend/dist
+frontend/public/stockfish
+backend/data/cache
+**/__pycache__
+.pytest_cache
+eval/results
