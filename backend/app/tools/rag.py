@@ -79,7 +79,7 @@ def load_corpus() -> list[Chunk]:
     chunks: list[Chunk] = []
     ideas = json.loads((CORPUS_DIR / "opening_ideas.json").read_text(encoding="utf-8"))
     for d in ideas["docs"]:
-        chunks.append(Chunk(id=d["id"], text=d["text"], title=d["title"], source="RepertoireAI opening notes",
+        chunks.append(Chunk(id=d["id"], text=d["text"], title=d["title"], source="SecondMind opening notes",
                             eco=d.get("eco"), opening=d["opening"], year=2026, license=ideas["_license"]))
 
     pgn_path = CORPUS_DIR / "master_games.pgn"

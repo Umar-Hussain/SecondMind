@@ -1,5 +1,5 @@
 ---
-title: RepertoireAI
+title: SecondMind
 emoji: ♞
 colorFrom: green
 colorTo: gray
@@ -9,7 +9,7 @@ pinned: false
 short_description: Opening-repertoire and preparation agent for club players
 ---
 
-# RepertoireAI
+# SecondMind
 
 A personalized opening-repertoire and preparation agent for club chess players. It reads your
 Lichess and Chess.com games, compares them with your repertoire, ranks where you leave it, explains

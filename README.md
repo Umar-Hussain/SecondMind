@@ -1,8 +1,8 @@
-# RepertoireAI
+# SecondMind
 
 **A personalized opening-repertoire and preparation agent for club chess players (1000–2000 Elo).**
 
-RepertoireAI does the work of a human chess *second*. It reads your Lichess and Chess.com games,
+SecondMind does the work of a human chess *second*. It reads your Lichess and Chess.com games,
 compares them with your own repertoire, ranks where you keep leaving it, finds recurring opening
 mistakes, retrieves master theory with citations, recommends practical moves (masters vs. Stockfish),
 scouts your next opponent, prepares a briefing with extra lines, and trains you with engine-verified
@@ -34,6 +34,9 @@ Course project — AI-4009 Generative AI, Assignment 3 (Pure Product track).
 | Quizzes + SM-2, `.ics` calendar reminders, scheduled jobs | ✅ |
 | React web app (Connect, Repertoire, Deviations, Gap report, Scout, Train, Progress) | ✅ |
 | Evaluation harness with labelled sets and baselines | ✅ |
+| Accounts (sign up / log in, hashed passwords, user and admin roles) | ✅ |
+| Repertoire library: admins publish, users view, copy and edit their own copy | ✅ |
+| Repertoire workspace: three-column builder, save / prune moves, notes, live engine | ✅ |
 | Concept clustering, chat, tutor hints, repertoire builder, image import | Planned (Assignment 4) |
 
 ---
@@ -77,6 +80,16 @@ python eval/run_eval.py                 # evaluation; LLM conditions A/B/C need 
 
 Without any LLM configured everything still runs: explanations fall back to deterministic templates
 (evaluation condition 0) and the agent runs a fixed tool plan.
+
+### Accounts and the library
+
+* Anyone can **sign up** with a username and password (passwords are stored as salted PBKDF2 hashes).
+* The **admin** account is created at startup from `ADMIN_USERNAME` and `ADMIN_PASSWORD` in `.env`.
+  Choose the password yourself; it is never committed.
+* Admins **publish** repertoires to the **Library**. Every user can open them read-only and press
+  **Add to mine** to get an editable copy; changes to the copy never touch the library original.
+* In the workspace, play a move on the board and press **Save move**; **Prune** removes a move and
+  everything after it.
 
 ### Demo script (about 5 minutes)
 

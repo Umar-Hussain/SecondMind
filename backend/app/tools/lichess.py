@@ -24,7 +24,7 @@ API = "https://lichess.org"
 
 
 def _headers(accept: str = "application/x-ndjson") -> dict[str, str]:
-    headers = {"Accept": accept, "User-Agent": "RepertoireAI (student project)"}
+    headers = {"Accept": accept, "User-Agent": "SecondMind (student project)"}
     token = get_settings().lichess_token
     if token:
         headers["Authorization"] = f"Bearer {token}"

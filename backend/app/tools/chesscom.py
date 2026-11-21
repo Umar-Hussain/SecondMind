@@ -28,7 +28,7 @@ CACHE_DIR = DATA_DIR / "cache" / "chesscom"
 
 def _headers() -> dict[str, str]:
     contact = get_settings().chesscom_contact_email or "no-contact-configured"
-    return {"User-Agent": f"RepertoireAI/0.1 (chess opening trainer; contact: {contact})"}
+    return {"User-Agent": f"SecondMind/0.1 (chess opening trainer; contact: {contact})"}
 
 
 def _archive_fixture(username: str, url: str):

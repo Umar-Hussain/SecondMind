@@ -1,13 +1,13 @@
-"""Deploy RepertoireAI to a Hugging Face Space (Docker SDK, free CPU hardware).
+"""Deploy SecondMind to a Hugging Face Space (Docker SDK, free CPU hardware).
 
     hf auth login                      # once, with your own write token (you type it, not this script)
-    python scripts/deploy_hf.py                        # -> DaniilDubov/repertoire-ai
+    python scripts/deploy_hf.py                        # -> DaniilDubov/secondmind
     python scripts/deploy_hf.py --space me/my-space
 
 What it does
 
 1. Creates the Space if needed (``sdk=docker``).
-2. Copies the secrets ``LLM_API_KEY``, ``LICHESS_TOKEN`` and ``CHESSCOM_CONTACT_EMAIL`` from your local
+2. Copies the secrets (LLM key, Lichess token, contact email, admin login, token-signing key) from your local
    ``.env`` into the Space's encrypted *secrets* (never into a file or the image).
 3. Uploads the code (no .env, databases, node_modules, engine binary or caches) with the Space README.
 
@@ -24,7 +24,7 @@ from pathlib import Path
 from huggingface_hub import HfApi
 
 ROOT = Path(__file__).resolve().parents[1]
-SECRETS = ("LLM_API_KEY", "LICHESS_TOKEN", "CHESSCOM_CONTACT_EMAIL")
+SECRETS = ("LLM_API_KEY", "LICHESS_TOKEN", "CHESSCOM_CONTACT_EMAIL", "ADMIN_USERNAME", "ADMIN_PASSWORD", "SECRET_KEY")
 INCLUDE = ["Dockerfile", ".dockerignore", "requirements.txt", "pyproject.toml",
            "backend/**", "frontend/**", "scripts/**"]
 EXCLUDE = ["**/node_modules/**", "**/dist/**", "frontend/public/stockfish/**", "**/__pycache__/**",
@@ -44,7 +44,7 @@ def read_env() -> dict[str, str]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--space", default="DaniilDubov/repertoire-ai")
+    ap.add_argument("--space", default="DaniilDubov/secondmind")
     ap.add_argument("--private", action="store_true", help="create the Space as private")
     args = ap.parse_args()
 
@@ -53,6 +53,11 @@ def main() -> None:
     api.create_repo(args.space, repo_type="space", space_sdk="docker", private=args.private, exist_ok=True)
 
     env = read_env()
+    if not env.get("SECRET_KEY"):
+        # A fixed signing key keeps people logged in across Space restarts.
+        import secrets as _secrets
+
+        env["SECRET_KEY"] = _secrets.token_hex(32)
     for key in SECRETS:
         if env.get(key):
             api.add_space_secret(args.space, key, env[key])
@@ -68,7 +73,7 @@ def main() -> None:
                         repo_type="space", commit_message="Space README")
     api.upload_folder(folder_path=str(ROOT), repo_id=args.space, repo_type="space",
                       allow_patterns=INCLUDE, ignore_patterns=EXCLUDE,
-                      commit_message="Deploy RepertoireAI")
+                      commit_message="Deploy SecondMind")
     user, name = args.space.split("/")
     print(f"Uploaded. The Space is building: https://huggingface.co/spaces/{args.space}")
     print(f"App URL once built: https://{user.lower()}-{name.lower()}.hf.space")

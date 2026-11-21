@@ -232,7 +232,7 @@ def run_tool(st: AgentState, name: str, args: Any) -> tuple[str, bool]:
     return json.dumps(payload, default=str)[:6000], not ok
 
 
-AGENT_SYSTEM = """You are RepertoireAI's orchestrator, a chess second working for one club player.
+AGENT_SYSTEM = """You are SecondMind's orchestrator, a chess second working for one club player.
 Plan the work, call tools to get every chess fact, react to errors and empty results, and finish
 with a short plain-language summary for the player. Never state a move, evaluation or source that
 did not come from a tool result in this conversation."""

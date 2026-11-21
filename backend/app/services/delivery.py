@@ -19,7 +19,7 @@ def briefing_ics(opponent: str, briefing_id: int, game_time: datetime, lead_minu
     if game_time.tzinfo is None:
         game_time = game_time.replace(tzinfo=timezone.utc)
     cal = Calendar()
-    prep = Event(name=f"Prep vs {opponent} (RepertoireAI briefing)", begin=game_time - timedelta(minutes=lead_minutes),
+    prep = Event(name=f"Prep vs {opponent} (SecondMind briefing)", begin=game_time - timedelta(minutes=lead_minutes),
                  duration=timedelta(minutes=30),
                  description=f"Open your briefing: {WEB_BASE}/scout?briefing={briefing_id}")
     prep.url = f"{WEB_BASE}/scout?briefing={briefing_id}"
@@ -32,6 +32,6 @@ def briefing_ics(opponent: str, briefing_id: int, game_time: datetime, lead_minu
 def review_session_ics(user_id: int, when: datetime, quizzes_due: int) -> str:
     """A short spaced-repetition review session in the player's calendar."""
     cal = Calendar()
-    cal.events.add(Event(name=f"RepertoireAI review ({quizzes_due} quizzes)", begin=when,
+    cal.events.add(Event(name=f"SecondMind review ({quizzes_due} quizzes)", begin=when,
                          duration=timedelta(minutes=15), description=f"{WEB_BASE}/train?user={user_id}"))
     return cal.serialize()

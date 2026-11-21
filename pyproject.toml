@@ -1,5 +1,5 @@
 [project]
-name = "repertoire-ai"
+name = "secondmind"
 version = "0.1.0"
 description = "Personalized opening-repertoire and preparation agent for club chess players"
 requires-python = ">=3.11"
