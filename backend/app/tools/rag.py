@@ -56,6 +56,16 @@ class Chunk:
                         players=self.players)
 
 
+def _eco_near(a: str, b: str, span: int = 10) -> bool:
+    """Same ECO volume and within ``span`` codes (C60 and C70 are both Ruy Lopez).
+
+    Comparing the first two characters would wrongly split C60-C69 from C70-C79.
+    """
+    if len(a) != 3 or len(b) != 3 or a[0] != b[0] or not (a[1:].isdigit() and b[1:].isdigit()):
+        return False
+    return abs(int(a[1:]) - int(b[1:])) <= span
+
+
 def tokenize(text: str) -> list[str]:
     return _TOKEN.findall(text.lower().replace("...", " "))
 
@@ -154,7 +164,7 @@ class TheoryIndex:
                 c_eco = self.chunks[idx].eco or ""
                 if c_eco == eco:
                     fused[idx] += 2.0 / RRF_K
-                elif c_eco[:2] == eco[:2]:
+                elif _eco_near(c_eco, eco):
                     fused[idx] += 0.5 / RRF_K
         ordered = sorted(fused.items(), key=lambda kv: kv[1], reverse=True)[:k]
         return [RetrievedDoc(id=self.chunks[i].id, text=self.chunks[i].text, score=round(s, 5),

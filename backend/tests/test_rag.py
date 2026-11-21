@@ -39,3 +39,9 @@ def test_master_games_for_evans() -> None:
 
 def test_index_is_cached() -> None:
     assert get_index() is get_index()
+
+
+def test_ruy_lopez_leak_retrieves_morphy_note() -> None:
+    # Regression: C60 must not prefer the Exchange note (C68) over the Morphy note (C70).
+    hits = retrieve("Ruy Lopez Nxe5 Ba4 plan typical mistake", eco="C60", k=2)
+    assert hits[0].id == "idea-ruy-morphy"
