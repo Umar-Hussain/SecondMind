@@ -81,3 +81,13 @@ def test_recommend_and_ics(api) -> None:
 
     ics = briefing_ics("rival_player", 1, datetime(2026, 12, 1, 18, 0, tzinfo=timezone.utc))
     assert "BEGIN:VCALENDAR" in ics and "Prep vs rival_player" in ics
+
+
+def test_api_prefix_and_built_site(api) -> None:
+    """Production layout: the web app calls /api/... and the site itself is served at /."""
+    from app.config import ROOT_DIR
+
+    assert api.get("/api/engine/status").json()["stockfish"] in (True, False)
+    if (ROOT_DIR / "frontend" / "dist" / "index.html").exists():
+        page = api.get("/")
+        assert page.status_code == 200 and "<div id=\"root\">" in page.text
