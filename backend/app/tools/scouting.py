@@ -14,6 +14,7 @@ Profiles are cached in ``OpponentProfile`` for 24 hours.
 
 from __future__ import annotations
 
+import re
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 
@@ -41,6 +42,28 @@ def fetch_opponent_games(opponent: str, platform: str = "lichess", max_games: in
     return client.fetch_games(opponent, max_games=max_games)
 
 
+def speed_of(time_control: str | None) -> str:
+    """bullet / blitz / rapid / classical from "600+0" (Lichess) or "600 (rapid)" / "180+2" (Chess.com)."""
+    tc = (time_control or "").lower()
+    for name in ("bullet", "blitz", "rapid", "classical", "daily"):
+        if name in tc:
+            return "classical" if name == "daily" else name
+    m = re.match(r"\s*(\d+)(?:\+(\d+))?", tc)
+    if not m:
+        return "unknown"
+    total = int(m.group(1)) + 40 * int(m.group(2) or 0)  # estimated seconds per player
+    return "bullet" if total < 180 else "blitz" if total < 480 else "rapid" if total < 1500 else "classical"
+
+
+def explorer_rows(games: list[NormalizedGame]) -> list[dict]:
+    """Compact game rows for the browser-side opening explorer (moves in UCI)."""
+    return [{"id": g.external_id, "source": g.source, "url": g.url, "white": g.white or "", "black": g.black or "",
+             "opp_color": g.color, "result": g.result, "opponent_of_them": g.opponent,
+             "rating_of_them": g.opponent_rating, "speed": speed_of(g.time_control),
+             "date": g.played_at.date().isoformat() if g.played_at else None, "moves": g.moves_uci}
+            for g in games]
+
+
 def build_profile(opponent: str, games: list[NormalizedGame], depth: int | None = None,
                   weakness_positions: int = 6) -> dict:
     by_color: dict[str, dict[str, list[str]]] = {"white": defaultdict(list), "black": defaultdict(list)}
@@ -51,6 +74,8 @@ def build_profile(opponent: str, games: list[NormalizedGame], depth: int | None 
     with_clocks = 0
     gambit_use: Counter[str] = Counter()
     positions: dict[tuple[str, str], list[str]] = defaultdict(list)  # (fen, move) -> results
+    paths: dict[tuple[str, str], list[str]] = {}  # (fen, move) -> moves that lead to fen (for the board)
+    colors: dict[tuple[str, str], str] = {}
 
     for g in games:
         op = classify(g.moves_uci)
@@ -74,6 +99,8 @@ def build_profile(opponent: str, games: list[NormalizedGame], depth: int | None 
         for ply, u in enumerate(g.moves_uci[:16]):
             if board.turn == me:
                 positions[(board.fen(), u)].append(g.result)
+                paths.setdefault((board.fen(), u), list(g.moves_uci[:ply]))
+                colors.setdefault((board.fen(), u), g.color)
             board.push_uci(u)
 
     def openings(color: str) -> list[dict]:
@@ -96,8 +123,15 @@ def build_profile(opponent: str, games: list[NormalizedGame], depth: int | None 
             loss = engine.eval_loss(fen, move, depth=depth)
             if loss >= 40:
                 board = chess.Board(fen)
-                weaknesses.append({"fen": fen, "fen_key": fen_key(fen), "move": move, "san": board.san(
-                    chess.Move.from_uci(move)), "loss_cp": loss, "games": len(results), "score": _score(results)})
+                san = board.san(chess.Move.from_uci(move))
+                after = board.copy()
+                after.push_uci(move)
+                # The punishing reply: engine best for the player after the opponent's mistake.
+                punish = engine.evaluate(after.fen(), depth=depth).best_move_uci if not after.is_game_over() else None
+                weaknesses.append({"fen": fen, "fen_key": fen_key(fen), "move": move, "san": san, "loss_cp": loss,
+                                   "games": len(results), "score": _score(results),
+                                   "path": paths[(fen, move)], "opp_color": colors[(fen, move)],
+                                   "punish": punish, "punish_san": after.san(chess.Move.from_uci(punish)) if punish else None})
             if len(weaknesses) >= weakness_positions:
                 break
     weaknesses.sort(key=lambda w: -(w["loss_cp"] * w["games"]))
