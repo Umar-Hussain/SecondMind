@@ -289,25 +289,34 @@ def _run_plan(st: AgentState, name: str, extra: dict | None = None) -> AgentResu
 
 def analyze_player(session: Session, user_id: int, depth: int | None = None) -> tuple[AgentResult, GapReport | None]:
     st = AgentState(session=session, user_id=user_id, depth=depth)
+    res: AgentResult | None = None
     if client.is_available():
-        res = run_agent(st, "Analyze my recent games: fetch them, find my recurring opening leaks, and build "
-                            "my gap report for the top 5. Then summarize the three most important points.")
-        if st.report is None:  # the model forgot the last step: finish it deterministically
-            run_tool(st, "build_gap_report", {"top": 5})
-    else:
+        try:
+            res = run_agent(st, "Analyze my recent games: fetch them, find my recurring opening leaks, and build "
+                                "my gap report for the top 5. Then summarize the three most important points.")
+        except (client.LLMError, client.LLMRefused) as exc:  # e.g. free-tier quota used up
+            log_run("agent", "provider_failed", {"workflow": "analyze_player"}, {"error": str(exc)}, False)
+    if res is None:
+        st.trail.clear()
         res = _run_plan(st, "analyze_player")
+    elif st.report is None:  # the model forgot the last step: finish it deterministically
+        run_tool(st, "build_gap_report", {"top": 5})
     return res, st.report
 
 
 def prepare_for_opponent(session: Session, user_id: int, opponent: str, platform: str = "lichess",
                          depth: int | None = None) -> tuple[AgentResult, dict | None]:
     st = AgentState(session=session, user_id=user_id, depth=depth)
+    res: AgentResult | None = None
     if client.is_available():
-        res = run_agent(st, f"Prepare me for my next game against '{opponent}' on {platform}. Scout them, "
-                            "build the briefing, and tell me the two things to remember.")
-    else:
+        try:
+            res = run_agent(st, f"Prepare me for my next game against '{opponent}' on {platform}. Scout them, "
+                                "build the briefing, and tell me the two things to remember.")
+        except (client.LLMError, client.LLMRefused) as exc:
+            log_run("agent", "provider_failed", {"workflow": "prepare_for_opponent"}, {"error": str(exc)}, False)
+    if res is None or st.briefing is None:
         run_tool(st, "scout_opponent", {"opponent": opponent, "platform": platform})
-        res = AgentResult("Briefing prepared with the deterministic plan.", 1, st.trail, "fallback")
+        res = AgentResult("Briefing prepared with the deterministic plan.", len(st.trail), st.trail, "fallback")
     return res, st.briefing
 
 

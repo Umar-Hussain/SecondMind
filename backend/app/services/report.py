@@ -134,7 +134,7 @@ def explain(f: LeakFacts, mode: str = "full", rating: int | None = None) -> tupl
         out = client.generate_structured(prompt, LeakExplanation, system=prompts.system_prompt(rating),
                                          name=f"leak_diagnosis:{mode}", max_retries=1, extra_check=check)
         return out, "llm"
-    except (ValueError, client.LLMRefused):
+    except (ValueError, client.LLMRefused, client.LLMError):
         if mode == "full":
             return template_explanation(f), "template"
         raise
@@ -215,5 +215,5 @@ def explain_deviation(dev, opening: str = "", eco: str | None = None, rating: in
         out = client.generate_structured(prompt, LeakExplanation, system=prompts.system_prompt(rating),
                                          name="deviation_explanation", max_retries=1, extra_check=check)
         return out, docs, "llm"
-    except (ValueError, client.LLMRefused):
+    except (ValueError, client.LLMRefused, client.LLMError):
         return template(), docs, "template"
