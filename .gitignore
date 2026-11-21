@@ -16,7 +16,7 @@ backend/data/chroma/
 backend/data/cache/
 
 # Stockfish binary (downloaded locally, see README)
-engine/
+/engine/
 
 # Frontend
 frontend/node_modules/
