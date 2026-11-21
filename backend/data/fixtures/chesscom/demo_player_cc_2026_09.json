@@ -1,0 +1,104 @@
+{
+ "games": [
+  {
+   "url": "https://www.chess.com/game/live/900000008",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.09.09\"]\n[Round \"?\"]\n[White \"demo_player_cc\"]\n[Black \"club_opponent\"]\n[Result \"1-0\"]\n[Link \"https://www.chess.com/game/live/900000008\"]\n\n1. e4 { [%clk 0:09:59] } 1... e5 { [%clk 0:09:59] } 2. Nf3 { [%clk 0:09:58] } 2... Nc6 { [%clk 0:09:58] } 3. Bc4 { [%clk 0:09:57] } 3... Nf6 { [%clk 0:09:49] } 4. Ng5 { [%clk 0:09:47] } 4... d5 { [%clk 0:09:39] } 5. exd5 { [%clk 0:09:37] } 5... Na5 { [%clk 0:09:28] } 1-0",
+   "time_control": "600",
+   "end_time": 1788988800,
+   "rated": true,
+   "time_class": "rapid",
+   "rules": "chess",
+   "white": {
+    "username": "demo_player_cc",
+    "rating": 1600,
+    "result": "win"
+   },
+   "black": {
+    "username": "club_opponent",
+    "rating": 1600,
+    "result": "resigned"
+   },
+   "_fixture_note": "dev A"
+  },
+  {
+   "url": "https://www.chess.com/game/live/900000011",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.09.12\"]\n[Round \"?\"]\n[White \"demo_player_cc\"]\n[Black \"club_opponent\"]\n[Result \"0-1\"]\n[Link \"https://www.chess.com/game/live/900000011\"]\n\n1. e4 { [%clk 0:09:59] } 1... e5 { [%clk 0:09:59] } 2. Nf3 { [%clk 0:09:58] } 2... Nc6 { [%clk 0:09:58] } 3. Bb5 { [%clk 0:09:57] } 3... a6 { [%clk 0:09:48] } 4. Nxe5 { [%clk 0:09:46] } 4... Nxe5 { [%clk 0:09:37] } 5. Bxa6 { [%clk 0:09:35] } 5... bxa6 { [%clk 0:09:25] } 6. d4 { [%clk 0:09:32] } 6... Ng6 { [%clk 0:09:21] } 0-1",
+   "time_control": "600",
+   "end_time": 1789240800,
+   "rated": true,
+   "time_class": "rapid",
+   "rules": "chess",
+   "white": {
+    "username": "demo_player_cc",
+    "rating": 1600,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "club_opponent",
+    "rating": 1600,
+    "result": "win"
+   },
+   "_fixture_note": "blunder B"
+  },
+  {
+   "url": "https://www.chess.com/game/live/900000013",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.09.14\"]\n[Round \"?\"]\n[White \"demo_player_cc\"]\n[Black \"club_opponent\"]\n[Result \"0-1\"]\n[Link \"https://www.chess.com/game/live/900000013\"]\n\n1. e4 { [%clk 0:09:59] } 1... c5 { [%clk 0:09:59] } 2. Nf3 { [%clk 0:09:58] } 2... d6 { [%clk 0:09:58] } 3. d4 { [%clk 0:09:57] } 3... cxd4 { [%clk 0:09:47] } 4. Nxd4 { [%clk 0:09:46] } 4... Nf6 { [%clk 0:09:36] } 5. e5 { [%clk 0:09:42] } 5... dxe5 { [%clk 0:09:32] } 6. Nf3 { [%clk 0:09:38] } 6... Qxd1+ { [%clk 0:09:27] } 7. Kxd1 { [%clk 0:09:33] } 7... Nc6 { [%clk 0:09:22] } 0-1",
+   "time_control": "600",
+   "end_time": 1789420800,
+   "rated": true,
+   "time_class": "rapid",
+   "rules": "chess",
+   "white": {
+    "username": "demo_player_cc",
+    "rating": 1600,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "club_opponent",
+    "rating": 1600,
+    "result": "win"
+   },
+   "_fixture_note": "mistake C"
+  },
+  {
+   "url": "https://www.chess.com/game/live/900000018",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.09.19\"]\n[Round \"?\"]\n[White \"demo_player_cc\"]\n[Black \"club_opponent\"]\n[Result \"1-0\"]\n[Link \"https://www.chess.com/game/live/900000018\"]\n\n1. e4 { [%clk 0:09:59] } 1... d5 { [%clk 0:09:59] } 2. exd5 { [%clk 0:09:58] } 2... Qxd5 { [%clk 0:09:58] } 3. Nc3 { [%clk 0:09:57] } 3... Qd6 { [%clk 0:09:54] } 4. d4 { [%clk 0:09:53] } 4... Nf6 { [%clk 0:09:50] } 1-0",
+   "time_control": "600",
+   "end_time": 1789852800,
+   "rated": true,
+   "time_class": "rapid",
+   "rules": "chess",
+   "white": {
+    "username": "demo_player_cc",
+    "rating": 1600,
+    "result": "win"
+   },
+   "black": {
+    "username": "club_opponent",
+    "rating": 1600,
+    "result": "resigned"
+   },
+   "_fixture_note": "uncovered 1...d5"
+  },
+  {
+   "url": "https://www.chess.com/game/live/800000000",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.09.01\"]\n[Round \"?\"]\n[White \"demo_player_cc\"]\n[Black \"club_opponent\"]\n[Result \"1-0\"]\n[Link \"https://www.chess.com/game/live/900000000\"]\n\n1. e4 { [%clk 0:09:59] } 1... e5 { [%clk 0:09:59] } 2. Nf3 { [%clk 0:09:58] } 2... Nc6 { [%clk 0:09:58] } 3. Bb5 { [%clk 0:09:57] } 3... a6 { [%clk 0:09:52] } 4. Ba4 { [%clk 0:09:50] } 4... Nf6 { [%clk 0:09:45] } 5. O-O { [%clk 0:09:43] } 5... Be7 { [%clk 0:09:37] } 6. Re1 { [%clk 0:09:35] } 6... b5 { [%clk 0:09:29] } 7. Bb3 { [%clk 0:09:25] } 7... d6 { [%clk 0:09:19] } 1-0",
+   "time_control": "600",
+   "end_time": 1788286800,
+   "rated": true,
+   "time_class": "rapid",
+   "rules": "chess",
+   "white": {
+    "username": "demo_player_cc",
+    "rating": 1600,
+    "result": "win"
+   },
+   "black": {
+    "username": "club_opponent",
+    "rating": 1600,
+    "result": "resigned"
+   },
+   "_fixture_note": "dup of game 0"
+  }
+ ]
+}
