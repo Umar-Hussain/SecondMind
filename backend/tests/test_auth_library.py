@@ -185,3 +185,31 @@ def test_my_repertoires_search(api) -> None:
     api.post("/repertoires", headers=user, json={"name": "Ruy main", "color": "white", "pgn": WHITE_PGN})
     assert len(api.get("/repertoires", headers=user, params={"q": "ruy"}).json()) == 1
     assert api.get("/repertoires", headers=user, params={"q": "dutch"}).json() == []
+
+
+# --- Passwords ----------------------------------------------------------------------
+
+
+def test_change_password(api) -> None:
+    h = _signup(api, "gina_x")
+    assert api.post("/auth/password", headers=h, json={"current_password": "wrong-one",
+                                                       "new_password": "brand-new-pass"}).status_code == 403
+    assert api.post("/auth/password", headers=h, json={"current_password": "a-long-password",
+                                                       "new_password": "short"}).status_code == 422
+    assert api.post("/auth/password", headers=h, json={"current_password": "a-long-password",
+                                                       "new_password": "brand-new-pass"}).status_code == 200
+    assert api.post("/auth/login", json={"username": "gina_x", "password": "a-long-password"}).status_code == 401
+    assert api.post("/auth/login", json={"username": "gina_x", "password": "brand-new-pass"}).status_code == 200
+
+
+def test_admin_user_list_and_reset(api, admin_headers) -> None:
+    user = _signup(api, "hank_x")
+    assert api.get("/admin/users", headers=user).status_code == 403
+    users = api.get("/admin/users", headers=admin_headers).json()
+    hank = next(u for u in users if u["username"] == "hank_x")
+    assert "password_hash" not in hank and hank["role"] == "user"
+    assert api.post(f"/admin/users/{hank['id']}/password", headers=user,
+                    json={"new_password": "temp-pass-123"}).status_code == 403
+    assert api.post(f"/admin/users/{hank['id']}/password", headers=admin_headers,
+                    json={"new_password": "temp-pass-123"}).status_code == 200
+    assert api.post("/auth/login", json={"username": "hank_x", "password": "temp-pass-123"}).status_code == 200

@@ -119,6 +119,50 @@ def update_me(body: ProfileUpdate, user: User = Depends(current_user), session: 
     return public_user(user)
 
 
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.post("/auth/password")
+def change_password(body: PasswordChange, user: User = Depends(current_user),
+                    session: Session = Depends(get_session)) -> dict:
+    if not verify_password(body.current_password, user.password_hash):
+        raise HTTPException(403, "Your current password is not correct")
+    validate_new_account(user.username or "user", body.new_password)  # same length rule as sign-up
+    user = session.merge(user)
+    user.password_hash = hash_password(body.new_password)
+    session.commit()
+    return {"changed": True}
+
+
+# --- Admin: users ---------------------------------------------------------------------------
+
+
+@router.get("/admin/users")
+def admin_users(admin: User = Depends(require_admin), session: Session = Depends(get_session)) -> list[dict]:
+    counts = dict(session.execute(select(Repertoire.user_id, func.count()).group_by(Repertoire.user_id)).all())
+    users = session.scalars(select(User).where(User.username.is_not(None)).order_by(User.created_at.desc())).all()
+    return [{**public_user(u), "created_at": u.created_at.isoformat() if u.created_at else None,
+             "repertoires": counts.get(u.id, 0)} for u in users]
+
+
+class PasswordReset(BaseModel):
+    new_password: str
+
+
+@router.post("/admin/users/{user_id}/password")
+def admin_reset_password(user_id: int, body: PasswordReset, admin: User = Depends(require_admin),
+                         session: Session = Depends(get_session)) -> dict:
+    target = session.get(User, user_id)
+    if target is None or target.username is None:
+        raise HTTPException(404, "user not found")
+    validate_new_account(target.username, body.new_password)
+    target.password_hash = hash_password(body.new_password)
+    session.commit()
+    return {"reset": True, "username": target.username}
+
+
 # --- Repertoires ------------------------------------------------------------------------
 
 
