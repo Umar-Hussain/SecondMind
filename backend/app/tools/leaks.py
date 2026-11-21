@@ -112,6 +112,11 @@ def analyze_game(game: NormalizedGame, depth: int | None = None, threshold: int 
                     result=game.result, opening_eco=opening.eco, opening_name=opening.name)
 
         # --- Gambit window: gambit rules only --------------------------------
+        # A main-line gambit move is never a mistake, even a ply or two past theory_end_ply
+        # (found by the evaluation: 3 false positives on Danish / Morra / Englund main lines).
+        if match and uci in gambits.theory_moves_at(match.gambit, board):
+            board.push(move)
+            continue
         if match and ply <= match.window_end_ply:
             verdict = gambits.judge_move(match, board, uci, ply, depth=depth, threshold_cp=threshold)
             if verdict.tag in ("gambit_deviation", "defender_trap"):
