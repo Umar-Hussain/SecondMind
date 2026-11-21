@@ -39,6 +39,7 @@ from app.tools import deviations, engine, masters, quiz, srs
 from app.tools.openings import classify
 from app.tools.pgn_utils import board_from_key, uci_to_san
 from app.tools.recommend import recommend_move
+from app.tools.search import search as search_repertoires
 from app.tools.repertoire import (
     copy_repertoire, delete_repertoire, edit_node, import_lichess_study, import_moves_text, import_pgn,
     load_tree, remove_move, save_tree, tree_to_json,
@@ -158,10 +159,11 @@ async def upload_repertoire(name: str = Form(...), color: str = Form(...), inten
 
 
 @router.get("/repertoires")
-def list_repertoires(user: User = Depends(current_user), session: Session = Depends(get_session)) -> list[dict]:
+def list_repertoires(q: str = "", user: User = Depends(current_user), session: Session = Depends(get_session)
+                     ) -> list[dict]:
     reps = session.scalars(select(Repertoire).where(Repertoire.user_id == user.id,
                                                     Repertoire.is_library.is_(False))).all()
-    return [_rep_summary(r) for r in reps]
+    return [{**_rep_summary(r), "match": why} for r, why in search_repertoires(session, list(reps), q)]
 
 
 @router.get("/repertoires/{rep_id}/tree")
@@ -238,12 +240,16 @@ def remove_repertoire(rep_id: int, user: User = Depends(current_user), session: 
 
 
 @router.get("/library")
-def library(user: User = Depends(current_user), session: Session = Depends(get_session)) -> list[dict]:
+def library(q: str = "", user: User = Depends(current_user), session: Session = Depends(get_session)) -> list[dict]:
+    """Library repertoires, optionally filtered by words, an ECO code or a move sequence."""
     reps = session.scalars(select(Repertoire).where(Repertoire.is_library.is_(True))
                            .order_by(Repertoire.created_at.desc())).all()
-    owners = {u.id: u.display_name or u.username for u in session.scalars(select(User))}
+    owner_ids = {r.user_id for r in reps}
+    owners = {u.id: u.display_name or u.username
+              for u in session.scalars(select(User).where(User.id.in_(owner_ids)))} if owner_ids else {}
     mine = {r.copied_from_id for r in session.scalars(select(Repertoire).where(Repertoire.user_id == user.id))}
-    return [{**_rep_summary(r, owners.get(r.user_id)), "in_my_repertoires": r.id in mine} for r in reps]
+    return [{**_rep_summary(r, owners.get(r.user_id)), "in_my_repertoires": r.id in mine, "match": why}
+            for r, why in search_repertoires(session, list(reps), q)]
 
 
 @router.post("/library")
