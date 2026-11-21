@@ -1,4 +1,4 @@
-"""FastAPI entry point for RepertoireAI.
+"""FastAPI entry point for SecondMind (opening-repertoire agent).
 
 Run from the ``backend`` folder with::
 
@@ -23,13 +23,18 @@ from app.tools import engine
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    init_db()  # tables are created on startup (spec Phase 2)
+    init_db()  # tables are created (and new columns added) on startup
+    from app.auth import ensure_admin
+    from app.db import SessionLocal
+
+    with SessionLocal() as session:
+        ensure_admin(session)  # admin from ADMIN_USERNAME / ADMIN_PASSWORD, if set
     yield
     engine.shutdown()  # never leave a Stockfish process behind
 
 
 app = FastAPI(
-    title="RepertoireAI",
+    title="SecondMind",
     description="Personalized opening-repertoire and preparation agent for club chess players.",
     version="0.1.0",
     lifespan=lifespan,

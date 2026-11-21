@@ -279,20 +279,30 @@ class ReviewOut(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class UserCreate(BaseModel):
+class SignupRequest(BaseModel):
+    username: str
+    password: str
+    display_name: str | None = None
     lichess_username: str | None = None
     chesscom_username: str | None = None
     rating: int | None = None
 
 
-class AccountLink(BaseModel):
-    user_id: int
-    platform: Source
+class LoginRequest(BaseModel):
     username: str
+    password: str
+
+
+class ProfileUpdate(BaseModel):
+    display_name: str | None = None
+    lichess_username: str | None = None
+    chesscom_username: str | None = None
+    rating: int | None = None
 
 
 class RepertoireCreate(BaseModel):
-    user_id: int
+    user_id: int | None = None  # ignored: the logged-in user owns it
+    description: str = ""
     name: str
     color: Color
     pgn: str | None = None
@@ -302,24 +312,24 @@ class RepertoireCreate(BaseModel):
 
 
 class AnalyzeRequest(BaseModel):
-    user_id: int
+    user_id: int | None = None  # ignored: taken from the login token
     max_games: int = 200
     use_llm: bool = True
 
 
 class ScoutRequest(BaseModel):
-    user_id: int
+    user_id: int | None = None  # ignored: taken from the login token
     opponent: str
     platform: Source = "lichess"
     max_games: int = 300
 
 
 class QuizAnswer(BaseModel):
-    user_id: int
+    user_id: int | None = None  # ignored: taken from the login token
     move_uci: str
 
 
 class ChatRequest(BaseModel):
-    user_id: int
+    user_id: int | None = None  # ignored: taken from the login token
     message: str
     session_id: int | None = None
