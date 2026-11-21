@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-opus-5-5"
 
+    # --- Accounts ---------------------------------------------------------------
+    secret_key: str = ""  # signs login tokens; empty = random key saved under data/cache
+    admin_username: str = ""  # admin account created/updated at startup
+    admin_password: str = ""  # set it yourself in .env; never committed
+
     # --- External services -------------------------------------------------
     lichess_token: str = ""
     chesscom_contact_email: str = ""
