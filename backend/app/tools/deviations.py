@@ -203,7 +203,9 @@ def analyze_repertoire(
         grp = target.setdefault(key, _Group(m.fen, m.played, m.repertoire_move))
         grp.games.append(g)
         gm = gambits.detect_gambit(g.moves_uci, g.color)
-        if gm and gm.played_by_user and m.ply <= gm.window_end_ply:
+        # Only a gambit deviation if it happens at/after the sacrifice and inside the theory window;
+        # leaving the repertoire on move 3 in a game that later became an Evans Gambit is not one.
+        if gm and gm.played_by_user and len(gm.gambit.trigger_uci) <= m.ply <= gm.window_end_ply:
             grp.gambit_ids.add(gm.gambit.id)
 
     recent_ids = [g.external_id for g in relevant]
