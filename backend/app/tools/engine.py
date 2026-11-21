@@ -120,7 +120,14 @@ def shutdown() -> None:
             _engine = None
 
 
-atexit.register(shutdown)
+# python-chess runs SimpleEngine on a non-daemon thread, and Python joins
+# non-daemon threads *before* plain atexit handlers run — so an atexit-only
+# shutdown never fires and the process hangs on exit. threading's own hook runs
+# before that join (concurrent.futures uses the same mechanism).
+try:
+    threading._register_atexit(shutdown)  # type: ignore[attr-defined]
+except (AttributeError, RuntimeError):  # pragma: no cover - very old/new Pythons
+    atexit.register(shutdown)
 
 
 def is_available() -> bool:

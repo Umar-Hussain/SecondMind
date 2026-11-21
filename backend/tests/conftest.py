@@ -41,6 +41,15 @@ def db() -> Iterator[Session]:
         engine.dispose()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _close_engine_after_session() -> Iterator[None]:
+    """Quit the batch Stockfish process when the test session ends."""
+    yield
+    from app.tools import engine
+
+    engine.shutdown()
+
+
 @pytest.fixture(scope="session")
 def stockfish_available() -> bool:
     return get_settings().stockfish_abspath.exists()
