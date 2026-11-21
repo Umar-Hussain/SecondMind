@@ -1,0 +1,180 @@
+{
+  "_license": "Original notes written for RepertoireAI by the project authors. Licensed CC BY 4.0. General opening ideas only; no text copied from books or courses.",
+  "docs": [
+    {
+      "id": "idea-ruy-morphy",
+      "title": "Ruy Lopez, Morphy Defence: plans for White",
+      "eco": "C70",
+      "opening": "Ruy Lopez",
+      "text": "After 1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 White normally retreats 4.Ba4, keeping the pin on the c6-knight and the option of Bxc6 later. Taking the e5-pawn at once with Nxe5 does not work while the bishop on b5 is attacked: after ...Nxe5 Black simply wins a piece for a pawn because the knight on f3 was the only defender of the pressure and a6 still hits the bishop. White's standard plan is O-O, Re1, c3 and d4, building a broad centre, with the light-squared bishop retreating to b3 and later c2 to support e4. Black usually answers with ...Nf6, ...Be7, ...b5 and ...d6, castling short and preparing ...Na5 with ...c5 to gain queenside space."
+    },
+    {
+      "id": "idea-ruy-exchange",
+      "title": "Ruy Lopez, Exchange Variation: the endgame plan",
+      "eco": "C68",
+      "opening": "Ruy Lopez",
+      "text": "In the Exchange Variation White gives up the bishop with Bxc6 to damage Black's pawns. After ...dxc6 Black has doubled c-pawns but the bishop pair and open lines. White's long-term trump is the healthy kingside pawn majority: in a simplified endgame White can create a passed pawn while Black's queenside majority is crippled. Black should keep pieces active, use the bishops, and avoid trading into a pure pawn endgame."
+    },
+    {
+      "id": "idea-italian-giuoco",
+      "title": "Italian Game, Giuoco Piano: slow build-up",
+      "eco": "C50",
+      "opening": "Italian Game",
+      "text": "With 3.Bc4 White aims the bishop at f7. In the modern Giuoco Piano White plays c3 and d3, castles, and often manoeuvres the queen's knight via d2-f1-g3, keeping a flexible centre. Black mirrors with ...Nf6, ...d6, ...O-O and ...a6 to give the c5-bishop a retreat. The main pawn breaks are d4 for White and ...d5 for Black. The Italian is a sound alternative to the Ruy Lopez; the trade-off is less direct pressure on e5."
+    },
+    {
+      "id": "idea-two-knights",
+      "title": "Two Knights Defence, 4.Ng5: the attack on f7",
+      "eco": "C57",
+      "opening": "Italian Game",
+      "text": "After 3...Nf6 4.Ng5 White attacks f7 twice. The main line 4...d5 5.exd5 Na5 gives up a pawn for time: Black chases the c4-bishop and gets quick development. Taking back on d5 with the knight (5...Nxd5) invites sharp sacrifices on f7. White should not grab more material at the cost of development; Black's compensation is real activity rather than material."
+    },
+    {
+      "id": "idea-evans",
+      "title": "Evans Gambit: why White gives the b-pawn",
+      "eco": "C51",
+      "opening": "Evans Gambit",
+      "text": "With 4.b4 White offers a pawn to deflect the c5-bishop and gain time for c3 and d4, building a big centre with tempo. After 4...Bxb4 5.c3 Ba5 6.d4 White castles quickly, opens lines with the centre pawns and aims at f7 with the bishop and queen on b3. White's compensation is development and the open c- and d-files, not material. White must keep playing actively: slow moves that let Black castle and return the pawn hand back the compensation."
+    },
+    {
+      "id": "idea-sicilian-open",
+      "title": "Open Sicilian with 2...d6: early pawn pushes",
+      "eco": "B54",
+      "opening": "Sicilian Defence",
+      "text": "After 1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 the e4-pawn is attacked. White normally defends it with 5.Nc3. Pushing 5.e5 is premature: after ...dxe5 the knight on d4 is attacked and the e-pawn has simply been lost, while queens may come off with White having nothing for the pawn. In the Open Sicilian White trades the d-pawn for Black's c-pawn, gets a lead in development and space, and Black gets the half-open c-file and a central pawn majority."
+    },
+    {
+      "id": "idea-najdorf-english",
+      "title": "Najdorf, English Attack (6.Be3): plans",
+      "eco": "B90",
+      "opening": "Sicilian Defence: Najdorf",
+      "text": "In the English Attack White plays Be3, f3, Qd2, castles long and storms the kingside with g4-g5 and h4. Black's plans are ...e5 or ...e6 with ...b5, ...Bb7 and ...Nbd7, castling short and racing on the queenside with ...b4. The f3-pawn supports e4 and prevents ...Ng4 hitting the e3-bishop. Timing matters: in opposite-side castling positions a single tempo decides the race."
+    },
+    {
+      "id": "idea-smith-morra",
+      "title": "Smith-Morra Gambit: development for a pawn",
+      "eco": "B21",
+      "opening": "Sicilian Defence: Smith-Morra Gambit",
+      "text": "With 3.c3 White offers a pawn to open lines against the Sicilian. After 3...dxc3 4.Nxc3 White develops with Nf3, Bc4, O-O, Qe2 and Rd1, aiming the rooks at the half-open c- and d-files and watching for a knight jump to d5 or b5. Black should complete development calmly (...Nc6, ...d6, ...e6, ...Nf6, ...Be7) and watch the d6-pawn. Declining with 3...Nf6 4.e5 Nd5 transposes to an Alapin-type position."
+    },
+    {
+      "id": "idea-caro-advance",
+      "title": "Caro-Kann Advance: Black's light-squared bishop and ...c5",
+      "eco": "B12",
+      "opening": "Caro-Kann Defence: Advance Variation",
+      "text": "After 1.e4 c6 2.d4 d5 3.e5 Black develops the light-squared bishop outside the pawn chain with 3...Bf5 before playing ...e6. Against the Short system (4.Nf3 e6 5.Be2) Black's most direct plan is ...c5, striking at the base of White's d4-e5 chain, followed by ...Nc6 and ...Qb6. Moving the bishop again with ...Bg4 spends a tempo and often lets White gain the bishop pair after h3, so it should be played only with a clear purpose. White's plans are space on the kingside, c3 to support d4, and sometimes c4."
+    },
+    {
+      "id": "idea-caro-bayonet",
+      "title": "Caro-Kann Advance: Tal and Bayonet ideas with h4 or g4",
+      "eco": "B12",
+      "opening": "Caro-Kann Defence: Advance Variation",
+      "text": "White can attack the f5-bishop with pawns, either h4 (Tal) or g4 (Bayonet). The idea is to gain kingside space with tempo. Black should answer h4 with ...h5 or ...h6 to keep a retreat square, and generally strike in the centre with ...c5 to show that White's pawn moves weakened the position. A careless reply that lets the bishop be trapped is the most common practical mistake."
+    },
+    {
+      "id": "idea-caro-classical",
+      "title": "Caro-Kann Classical (4...Bf5): solid structure",
+      "eco": "B18",
+      "opening": "Caro-Kann Defence: Classical Variation",
+      "text": "After 3.Nc3 dxe4 4.Nxe4 Bf5 5.Ng3 Bg6 White usually plays h4 and h5 to gain space and harass the bishop. Black answers ...h6 and keeps a very solid structure with ...e6, ...Nd7, ...Ngf6 and often castles long. The key Black idea is that there are no weaknesses: Black aims for ...c5 or ...e5 breaks once development is complete. The move order 2.Nc3 d5 3.d4 transposes to the same structure."
+    },
+    {
+      "id": "idea-caro-exchange",
+      "title": "Caro-Kann Exchange and Panov",
+      "eco": "B13",
+      "opening": "Caro-Kann Defence: Exchange Variation",
+      "text": "After 3.exd5 cxd5 the structure is symmetrical. With Bd3, c3 and Bf4 White plays a reversed Exchange Slav; with 4.c4 (the Panov) White accepts an isolated queen's pawn in exchange for active pieces. Black should blockade d5 and trade pieces against the isolated pawn, while White aims for kingside attacks and the d4-d5 break."
+    },
+    {
+      "id": "idea-french-advance",
+      "title": "French Advance: attacking the d4 base",
+      "eco": "C02",
+      "opening": "French Defence: Advance Variation",
+      "text": "After 3.e5 c5 4.c3 Black pressures d4 with ...Nc6, ...Qb6 and sometimes ...Nge7-f5. White defends with Nf3, Be2 or Bd3 and a3-b4 ideas. The French's typical problem piece is the light-squared bishop on c8, often activated via ...Bd7-b5 or traded. The Milner-Barry Gambit (6.Bd3) offers the d4-pawn for rapid development."
+    },
+    {
+      "id": "idea-scandinavian",
+      "title": "Scandinavian Defence: early queen and tempo",
+      "eco": "B01",
+      "opening": "Scandinavian Defence",
+      "text": "After 1.e4 d5 2.exd5 Qxd5 3.Nc3 the black queen must move again; the main retreats are ...Qa5 and ...Qd6. White gains time with d4, Nf3, Bc4 or Bd2 and should develop rapidly rather than chase the queen aimlessly. The Modern line 2...Nf6 aims to recapture with the knight; White can keep the pawn temporarily with c4 but often simply develops with d4."
+    },
+    {
+      "id": "idea-alekhine",
+      "title": "Alekhine Defence: provoking pawns forward",
+      "eco": "B02",
+      "opening": "Alekhine Defence",
+      "text": "With 1...Nf6 Black invites e5 and then attacks the advanced pawns. In the Modern Variation (4.Nf3) White keeps a modest space advantage without over-extending. Black's play is ...d6 trades, ...Bg4 pressure on the knight, and piece play against the centre. White should avoid pushing every pawn; a compact centre is harder to undermine."
+    },
+    {
+      "id": "idea-kings-gambit",
+      "title": "King's Gambit Accepted: compensation and the f-file",
+      "eco": "C33",
+      "opening": "King's Gambit",
+      "text": "With 2.f4 White offers the f-pawn to open the f-file and build a centre with d4. After 2...exf4 3.Nf3 Black often defends the f4-pawn with ...g5. In the Kieseritzky (4.h4 g4 5.Ne5) White undermines the pawn chain; in the Muzio (4.Bc4 g4 5.O-O) White sacrifices a knight for a lead in development. In every line White's compensation is speed: quick castling, pressure on f7 and the f-file. Early queen sorties such as Qe2 that ignore development hand Black time to consolidate."
+    },
+    {
+      "id": "idea-danish",
+      "title": "Danish Gambit: two pawns for two bishops",
+      "eco": "C21",
+      "opening": "Danish Gambit",
+      "text": "After 2.d4 exd4 3.c3 dxc3 4.Bc4 cxb2 5.Bxb2 White has given two pawns for two powerful bishops aimed at the kingside. Black's safest antidote is to return material with ...d5, opening lines for Black's own pieces. White must play energetically: the bishops need open diagonals, and a slow move lets Black consolidate with an extra pawn."
+    },
+    {
+      "id": "idea-englund",
+      "title": "Englund Gambit: traps and the sound defence",
+      "eco": "A40",
+      "opening": "Englund Gambit",
+      "text": "1.d4 e5 is objectively dubious; White keeps the pawn with 2.dxe5. After 2...Nc6 3.Nf3 Qe7 Black sets traps. The best-known: 4.Bf4 Qb4+ 5.Bd2 Qxb2 and now 6.Bc3? runs into ...Bb4!, pinning the bishop and attacking the rook on a1, winning material. The safe defence is 6.Nc3, developing and protecting the queenside. White should develop naturally (Nc3, Bf4 or Qd5 ideas) and not grab more pawns at the cost of development."
+    },
+    {
+      "id": "idea-blackmar-diemer",
+      "title": "Blackmar-Diemer Gambit: the half-open f-file",
+      "eco": "D00",
+      "opening": "Blackmar-Diemer Gambit",
+      "text": "After 1.d4 d5 2.e4 dxe4 3.Nc3 Nf6 4.f3 White offers the f-pawn to open the f-file and develop quickly. After ...exf3 Nxf3 White's plans are Bd3, O-O, Qe1-h4 and pressure on f7. Black should develop with ...Bg4 or ...e6 and return material when needed. It is objectively dubious but practically dangerous at club level."
+    },
+    {
+      "id": "idea-london",
+      "title": "London System: setup and plans",
+      "eco": "D02",
+      "opening": "London System",
+      "text": "White plays d4, Bf4, e3, Nf3, c3, Bd3 and Nbd2, a solid setup that works against most Black replies. White often aims for Ne5 with f4, or a kingside attack after Black castles. Black's main ideas are ...c5 with ...Qb6 hitting b2, and ...Nh5 to chase the f4-bishop. A London player who reacts slowly to an early ...c5 and ...Qb6 often ends up passive."
+    },
+    {
+      "id": "idea-slav",
+      "title": "Slav Defence: supporting d5 with ...c6",
+      "eco": "D10",
+      "opening": "Slav Defence",
+      "text": "In the Slav (1.d4 d5 2.c4 c6) Black supports d5 without blocking the c8-bishop, which can come to f5 or g4. In the main lines Black sometimes takes on c4 and tries to keep the pawn with ...b5, or plays ...a6 (the Chebanenko). White's plans are e3, Nc3, Bd3 and the e4 break, or a4 to stop ...b5."
+    },
+    {
+      "id": "idea-qgd",
+      "title": "Queen's Gambit Declined: the solid centre",
+      "eco": "D30",
+      "opening": "Queen's Gambit Declined",
+      "text": "With ...e6 Black keeps a pawn on d5 at the cost of the c8-bishop's scope. White develops Nc3, Bg5, e3 and Nf3; Black answers ...Nf6, ...Be7, ...O-O and looks for the freeing breaks ...c5 or ...e5. The Queen's Gambit is not a real gambit: after ...dxc4 White normally regains the pawn."
+    },
+    {
+      "id": "idea-benko",
+      "title": "Benko Gambit: long-term queenside pressure",
+      "eco": "A57",
+      "opening": "Benko Gambit",
+      "text": "With ...b5 Black offers a pawn for open a- and b-files. After cxb5 a6 bxa6 Bxa6 Black fianchettoes the dark-squared bishop, castles and doubles rooks on the a- and b-files. The compensation lasts into the endgame, which is why the Benko is considered sound. White's plan is to consolidate with a4, Nd2-c4 and to keep the extra pawn safe."
+    },
+    {
+      "id": "idea-general-castling",
+      "title": "Opening principle: castle before opening the centre",
+      "eco": null,
+      "opening": "General principles",
+      "text": "In open positions the king in the centre becomes a target once files open. Club players often delay castling to grab a pawn or start an attack. A practical rule: if the centre can open within the next few moves, castle first. Delayed castling is a common cause of quick losses across very different openings."
+    },
+    {
+      "id": "idea-general-tempo",
+      "title": "Opening principle: do not move the same piece twice",
+      "eco": null,
+      "opening": "General principles",
+      "text": "Each tempo in the opening is valuable. Moving the same piece repeatedly, or making early queen moves that can be chased, lets the opponent develop with gain of time. Exceptions are tactical: retreating a piece that is attacked, or moving it again to win material. In gambits the side with fewer pawns must be especially economical with time."
+    }
+  ]
+}
