@@ -206,3 +206,4 @@ table.list tbody tr:hover, table.list tr.selected, .leaklist li.selected { backg
 .searchbox input:focus { border: none; }
 .search-icon { color: var(--muted); font-size: 1.2rem; }
 .tag.match { background: var(--warn-dim); color: #f0b45a; }
+.searchbox input::-webkit-search-cancel-button { display: none; } /* we draw our own clear button */
