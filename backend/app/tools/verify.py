@@ -115,14 +115,22 @@ def _norm(san: str) -> str:
     return san.rstrip("+#").replace("0-0-0", "O-O-O").replace("0-0", "O-O")
 
 
+def unverified_moves(text: str, allowed: Iterable[str]) -> list[str]:
+    """Move-like tokens in ``text`` that no tool supplied (the guard's exact rule).
+
+    A bare square such as "e5" is allowed when it is the destination square of a
+    supplied move, because prose like "the pawn on e5" names squares. Known limit:
+    such a token could also be an unverified pawn move to that square.
+    """
+    allowed_set = {_norm(a) for a in allowed}
+    allowed_squares = {a[-2:] for a in allowed_set if len(a) >= 2}
+    bad = [mv for mv in extract_moves(text) if _norm(mv) not in allowed_set]
+    return [b for b in bad if not (len(b) == 2 and b in allowed_squares)]
+
+
 def verify_text_moves(text: str, allowed: Iterable[str]) -> VerificationResult:
     """Every move token in ``text`` must be one the tools supplied (SAN or UCI)."""
-    allowed_set = {_norm(a) for a in allowed}
-    bad = [mv for mv in extract_moves(text) if _norm(mv) not in allowed_set]
-    # Plain squares (e.g. "the d5 square") look like pawn moves; only flag them when the
-    # text uses them as moves is impossible to know, so squares named in allowed moves pass.
-    allowed_squares = {a[-2:] for a in allowed_set if len(a) >= 2}
-    bad = [b for b in bad if not (len(b) == 2 and b in allowed_squares)]
+    bad = unverified_moves(text, allowed)
     if bad:
         return VerificationResult(ok=False, reasons=[f"unverified move '{b}' in text" for b in sorted(set(bad))])
     return VerificationResult(ok=True)
