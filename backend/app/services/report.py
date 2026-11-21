@@ -107,7 +107,8 @@ def template_explanation(f: LeakFacts) -> LeakExplanation:
     plan = f"Play {f.rec_san} instead ({label}: {f.rec_reason})." if f.rec_san else ""
     cites: list[str] = []
     if f.docs:
-        plan += f" Background: {f.docs[0].citation.title} [{f.docs[0].id}]."
+        # Cite by id only: document titles can contain move text ("...c5") that was not verified here.
+        plan += f" Background reading: [{f.docs[0].id}]."
         cites = [f.docs[0].id]
     return LeakExplanation(explanation=expl, plan=plan, memory_aid="", citations=cites)
 
@@ -197,7 +198,7 @@ def explain_deviation(dev, opening: str = "", eco: str | None = None, rating: in
                 f"{dev.repertoire_san}; Stockfish says it {verdict} ({dev.avg_eval_loss / 100:.2f} pawns).")
         plan = f"Recommended: {dev.recommended_san} ({dev.recommended_source}). {dev.reason}"
         if docs:
-            plan += f" See {docs[0].citation.title} [{docs[0].id}]."
+            plan += f" Background reading: [{docs[0].id}]."
         return LeakExplanation(explanation=text, plan=plan, citations=[docs[0].id] if docs else [])
 
     if not client.is_available():
