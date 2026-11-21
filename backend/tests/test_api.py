@@ -100,3 +100,21 @@ def test_api_prefix_and_built_site(api) -> None:
     if (ROOT_DIR / "frontend" / "dist" / "index.html").exists():
         page = api.get("/")
         assert page.status_code == 200 and "<div id=\"root\">" in page.text
+
+
+def test_unexpected_errors_return_json() -> None:
+    """A crash inside a route comes back as JSON with a reference, not a plain-text page."""
+    from fastapi import APIRouter
+
+    boom = APIRouter()
+
+    @boom.get("/__boom")
+    def _boom() -> dict:
+        raise RuntimeError("kaboom")
+
+    app.include_router(boom)
+    with TestClient(app, raise_server_exceptions=False) as c:
+        r = c.get("/__boom")
+    assert r.status_code == 500 and "reference" in r.json()["detail"] and "kaboom" not in r.text
+    status = TestClient(app).get("/engine/status").json()
+    assert status["database"] in ("sqlite", "postgresql") and status["version"]

@@ -498,5 +498,11 @@ def progress(user: User = Depends(current_user), session: Session = Depends(get_
 @router.get("/engine/status")
 def engine_status() -> dict:
     s = get_settings()
+    import os
+
+    from app.db import engine as db_engine
+
     return {"stockfish": engine.is_available(), "llm": s.llm_enabled, "provider": s.llm_provider,
-            "offline": s.offline, "app": "SecondMind"}
+            "offline": s.offline, "app": "SecondMind",
+            "database": db_engine.dialect.name,  # "postgresql" (Neon) or "sqlite" - never the address
+            "version": (os.environ.get("RENDER_GIT_COMMIT") or "")[:7] or "local"}

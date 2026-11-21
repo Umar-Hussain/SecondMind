@@ -10,7 +10,11 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+import logging
+import uuid
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -19,6 +23,8 @@ from app.api import routes, ws
 from app.config import ROOT_DIR
 from app.db import init_db
 from app.tools import engine
+
+logger = logging.getLogger("secondmind")
 
 
 @asynccontextmanager
@@ -55,6 +61,14 @@ app.include_router(ws.router)
 # this server, exactly like the Vite dev proxy does during development.
 app.include_router(routes.router, prefix="/api", include_in_schema=False)
 app.include_router(ws.router, prefix="/api")
+
+
+@app.exception_handler(Exception)
+async def unexpected_error(request: Request, exc: Exception) -> JSONResponse:
+    """Unexpected failures: full traceback to the server log, a short JSON message to the client."""
+    error_id = uuid.uuid4().hex[:8]
+    logger.exception("unhandled error %s on %s %s", error_id, request.method, request.url.path)
+    return JSONResponse(status_code=500, content={"detail": f"Server error (reference {error_id}). Please try again."})
 
 
 @app.get("/health")
