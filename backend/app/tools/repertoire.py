@@ -340,3 +340,91 @@ def tree_to_json(tree: RepTree) -> dict:
             "parent": node.parent,
         })
     return {"color": tree.color, "name": tree.name, "root": START_KEY, "nodes": out}
+
+
+# ---------------------------------------------------------------------------
+# Library and editing helpers
+# ---------------------------------------------------------------------------
+
+
+def copy_repertoire(session: Session, source_id: int, user_id: int, name: str | None = None) -> Repertoire:
+    """Copy a (library) repertoire into a user's own, editable repertoire."""
+    src = session.get(Repertoire, source_id)
+    if src is None:
+        raise KeyError(f"repertoire {source_id} not found")
+    tree = load_tree(session, source_id)
+    tree.name = name or src.name
+    rep = save_tree(session, user_id, tree, "library", src.raw_pgn, src.intentional_gambit)
+    rep.copied_from_id = src.id
+    rep.description = src.description
+    session.commit()
+    return rep
+
+
+def _reachable(session: Session, repertoire_id: int, color: str) -> set[str]:
+    """Positions reachable from the start through stored moves (transpositions included)."""
+    rows = {r.fen_key: r for r in session.scalars(select(RepertoireNode)
+                                                    .where(RepertoireNode.repertoire_id == repertoire_id))}
+    seen: set[str] = set()
+    stack = [START_KEY]
+    while stack:
+        key = stack.pop()
+        if key in seen or key not in rows:
+            continue
+        seen.add(key)
+        row = rows[key]
+        board = chess.Board(key + " 0 1")
+        moves = [m for m in [row.user_move_uci, *(row.alternative_moves_json or []),
+                             *(row.opponent_moves_json or [])] if m]
+        for u in moves:
+            child = board.copy()
+            child.push_uci(u)
+            stack.append(fen_key(child))
+    return seen
+
+
+def remove_move(session: Session, repertoire_id: int, key: str, move: str) -> int:
+    """Remove one move from a position and prune branches that are no longer reachable.
+
+    Returns the number of positions deleted. Removing the main user move promotes the
+    first alternative, if any.
+    """
+    rep = session.get(Repertoire, repertoire_id)
+    if rep is None:
+        raise KeyError(f"repertoire {repertoire_id} not found")
+    row = session.scalars(select(RepertoireNode).where(RepertoireNode.repertoire_id == repertoire_id,
+                                                       RepertoireNode.fen_key == key)).first()
+    if row is None:
+        raise ValueError("position is not in this repertoire")
+    alts = list(row.alternative_moves_json or [])
+    opps = list(row.opponent_moves_json or [])
+    if row.user_move_uci == move:
+        row.user_move_uci = alts.pop(0) if alts else None
+    elif move in alts:
+        alts.remove(move)
+    elif move in opps:
+        opps.remove(move)
+    else:
+        raise ValueError("that move is not stored in this position")
+    row.alternative_moves_json, row.opponent_moves_json = alts, opps
+    session.flush()
+    keep = _reachable(session, repertoire_id, rep.color)
+    removed = 0
+    for node in session.scalars(select(RepertoireNode).where(RepertoireNode.repertoire_id == repertoire_id)):
+        if node.fen_key not in keep:
+            session.delete(node)
+            removed += 1
+    session.commit()
+    return removed
+
+
+def delete_repertoire(session: Session, repertoire_id: int) -> None:
+    from app.models import RepertoireDeviation, UncoveredLine
+
+    for model in (RepertoireNode, RepertoireDeviation, UncoveredLine):
+        for row in session.scalars(select(model).where(model.repertoire_id == repertoire_id)):
+            session.delete(row)
+    rep = session.get(Repertoire, repertoire_id)
+    if rep is not None:
+        session.delete(rep)
+    session.commit()
