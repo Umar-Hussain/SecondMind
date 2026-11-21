@@ -425,6 +425,57 @@ def scout_opponent(body: ScoutRequest, depth: int | None = Query(None, ge=6, le=
     return {"briefing_id": bid, **briefing.model_dump(mode="json")}
 
 
+@router.get("/scout/games")
+def scout_games(opponent: str, platform: str = "lichess", max_games: int = Query(200, ge=10, le=300),
+                user: User = Depends(current_user)) -> dict:
+    """The opponent's games for the board explorer (built in the browser, like an opening explorer)."""
+    from app.tools.http import NotFoundError
+    from app.tools.scouting import explorer_rows, fetch_opponent_games
+
+    if platform not in ("lichess", "chesscom"):
+        raise HTTPException(422, "platform must be lichess or chesscom")
+    try:
+        games = fetch_opponent_games(opponent.strip(), platform, max_games)
+    except NotFoundError:
+        raise HTTPException(404, f"No {platform} player called '{opponent}'")
+    return {"opponent": opponent.strip(), "platform": platform, "count": len(games), "games": explorer_rows(games)}
+
+
+@router.get("/scout/profile")
+def scout_profile(opponent: str, platform: str = "lichess", depth: int | None = Query(12, ge=6, le=18),
+                  user: User = Depends(current_user), session: Session = Depends(get_session)) -> dict:
+    """Engine-checked profile: repeated lines and recurring mistakes, each with a path for the board."""
+    from app.tools.scouting import scout
+
+    return scout(session, opponent.strip(), platform, depth=depth)
+
+
+@router.get("/repertoire-moves")
+def repertoire_moves(fen: str, user: User = Depends(current_user), session: Session = Depends(get_session)) -> dict:
+    """Your prepared moves in this exact position, from all your repertoires of the side to move."""
+    from app.models import RepertoireNode
+    from app.tools.pgn_utils import fen_key
+
+    try:
+        board = chess.Board(fen)
+    except ValueError:
+        raise HTTPException(422, "invalid FEN")
+    color = "white" if board.turn == chess.WHITE else "black"
+    reps = {r.id: r for r in session.scalars(select(Repertoire).where(
+        Repertoire.user_id == user.id, Repertoire.color == color, Repertoire.is_library.is_(False)))}
+    out = []
+    if reps:
+        nodes = session.scalars(select(RepertoireNode).where(RepertoireNode.repertoire_id.in_(list(reps)),
+                                                             RepertoireNode.fen_key == fen_key(board)))
+        for n in nodes:
+            for kind, moves in (("main", [n.user_move_uci] if n.user_move_uci else []),
+                                ("alternative", n.alternative_moves_json or [])):
+                for u in moves:
+                    out.append({"uci": u, "san": board.san(chess.Move.from_uci(u)), "kind": kind,
+                                "repertoire": reps[n.repertoire_id].name, "repertoire_id": n.repertoire_id})
+    return {"color": color, "moves": out}
+
+
 def _own_briefing(session: Session, briefing_id: int, user: User) -> BriefingRow:
     row = session.get(BriefingRow, briefing_id)
     if row is None or (row.user_id != user.id and user.role != "admin"):
