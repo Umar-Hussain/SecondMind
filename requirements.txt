@@ -13,3 +13,4 @@ apscheduler>=3.10
 ics>=0.7
 python-multipart>=0.0.9
 pytest>=8.0
+psycopg[binary]>=3.2

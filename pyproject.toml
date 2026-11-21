@@ -18,6 +18,7 @@ dependencies = [
     "apscheduler>=3.10",
     "ics>=0.7",
     "python-multipart>=0.0.9",
+    "psycopg[binary]>=3.2",
 ]
 
 [project.optional-dependencies]

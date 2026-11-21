@@ -20,11 +20,39 @@ class Base(DeclarativeBase):
     """Declarative base shared by every table in ``app.models``."""
 
 
+def normalize_url(url: str) -> str:
+    """Hosted Postgres (Neon, Render, Heroku) hands out ``postgres://`` / ``postgresql://``
+    URLs; SQLAlchemy needs the driver named explicitly: ``postgresql+psycopg://``."""
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
+def enforce_sqlite_foreign_keys(eng: Engine) -> None:
+    """SQLite ignores foreign keys unless asked; enforce them so SQLite behaves like Postgres."""
+    from sqlalchemy import event
+
+    @event.listens_for(eng, "connect")
+    def _fk_on(dbapi_conn, _record) -> None:  # pragma: no cover - trivial
+        cur = dbapi_conn.cursor()
+        cur.execute("PRAGMA foreign_keys=ON")
+        cur.close()
+
+
 def make_engine(url: str | None = None) -> Engine:
-    """Create an engine. SQLite needs ``check_same_thread=False`` for FastAPI."""
-    url = url or get_settings().database_url
-    connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
-    return create_engine(url, connect_args=connect_args, future=True)
+    """Create an engine: SQLite locally, Postgres (e.g. Neon) when DATABASE_URL points there."""
+    url = normalize_url(url or get_settings().database_url)
+    if url.startswith("sqlite"):
+        # FastAPI serves requests from several threads.
+        eng = create_engine(url, connect_args={"check_same_thread": False}, future=True)
+        enforce_sqlite_foreign_keys(eng)
+        return eng
+    # Serverless Postgres closes idle connections: test each one before use and recycle often.
+    # connect_timeout matters: a hostname with several addresses can have one that never
+    # answers; without a timeout the driver waits on it forever instead of trying the next.
+    return create_engine(url, future=True, pool_pre_ping=True, pool_recycle=300, pool_size=5, max_overflow=5,
+                         connect_args={"connect_timeout": 10})
 
 
 engine: Engine = make_engine()
@@ -62,7 +90,11 @@ def _add_missing_columns(bind: Engine) -> None:
                 default = ""
                 if col.default is not None and getattr(col.default, "is_scalar", False):
                     value = col.default.arg
-                    default = f" DEFAULT {int(value) if isinstance(value, bool) else repr(value)}"
+                    if isinstance(value, bool):
+                        literal = ("1" if value else "0") if bind.dialect.name == "sqlite" else ("TRUE" if value else "FALSE")
+                    else:
+                        literal = repr(value)
+                    default = f" DEFAULT {literal}"
                 conn.execute(text(f'ALTER TABLE {table.name} ADD COLUMN "{col.name}" {ddl_type}{default}'))
 
 
