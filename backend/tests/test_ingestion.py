@@ -67,3 +67,12 @@ def test_fetch_and_store_user_games(db) -> None:
     assert added == len(games)
     # Storing again adds nothing.
     assert store_games(db, user.id, games) == 0
+
+
+def test_two_users_can_store_the_same_game(db) -> None:
+    games, _ = fetch_user_games(User(lichess_username="demo_player"))
+    for name in ("a", "b"):
+        u = User(lichess_username=name)
+        db.add(u)
+        db.commit()
+        assert store_games(db, u.id, games[:3]) == 3

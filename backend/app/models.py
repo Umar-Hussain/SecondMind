@@ -49,7 +49,8 @@ class Game(Base):
     """A normalized game from Lichess or Chess.com, tagged with its source."""
 
     __tablename__ = "games"
-    __table_args__ = (UniqueConstraint("source", "external_id", name="uq_game_source_ext"),)
+    # Per user: both players of one game may use the app and each store their own copy.
+    __table_args__ = (UniqueConstraint("user_id", "source", "external_id", name="uq_game_user_source_ext"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
