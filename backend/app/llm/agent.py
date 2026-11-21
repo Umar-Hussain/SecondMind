@@ -189,7 +189,7 @@ TOOLS: dict[str, Tool] = {t.name: t for t in [
          _obj({"limit": {"type": "integer", "minimum": 1, "maximum": 20}}, []), t_build_quiz),
     Tool("schedule_review", "Schedule spaced-repetition reviews for quizzes.",
          _obj({"quiz_ids": {"type": "array", "items": {"type": "integer"}}}, []), t_schedule_review),
-    Tool("send_message", "Queue a short message to the player (Telegram / web).",
+    Tool("send_message", "Queue a short message to the player in the web app.",
          _obj({"text": {"type": "string"}}, ["text"]), t_send_message),
 ]}
 

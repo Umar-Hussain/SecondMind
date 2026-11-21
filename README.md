@@ -31,7 +31,7 @@ Course project — AI-4009 Generative AI, Assignment 3 (Pure Product track).
 | Claude client: structured output, retries, run log; agent with 13 tools | ✅ |
 | Gap report in 4 conditions (template / LLM / LLM+RAG / guarded) | ✅ |
 | Opponent scouting, briefing, extra lines, novelty | ✅ |
-| Quizzes + SM-2, Telegram bot, `.ics` reminders, scheduled jobs | ✅ |
+| Quizzes + SM-2, `.ics` calendar reminders, scheduled jobs | ✅ |
 | React web app (Connect, Repertoire, Deviations, Gap report, Scout, Train, Progress) | ✅ |
 | Evaluation harness with labelled sets and baselines | ✅ |
 | Concept clustering, chat, tutor hints, repertoire builder, image import | Planned (Assignment 4) |
@@ -67,7 +67,6 @@ Optional:
 ```bash
 python scripts/download_eco.py          # full Lichess ECO tables (CC0) instead of the bundled subset
 python scripts/calibrate_gambits.py 18  # recompute gambit baselines with Stockfish
-python -m app.services.delivery         # Telegram bot (needs TELEGRAM_BOT_TOKEN), run from backend/
 python -m app.services.jobs             # scheduler (daily re-mining and quizzes), run from backend/
 python eval/run_eval.py                 # evaluation; add ANTHROPIC_API_KEY for LLM conditions A/B/C
 ```
@@ -91,7 +90,7 @@ Without `ANTHROPIC_API_KEY` everything still runs: explanations fall back to det
 ## Architecture
 
 ```
-React web app (board, chess.js) ── Telegram bot ── .ics calendar
+React web app (board, chess.js) ── .ics calendar reminders
             │  REST + WebSocket
 FastAPI  (api/routes.py, api/ws.py)
             │
@@ -114,7 +113,7 @@ SQLite (SQLAlchemy) · engine cache · TF-IDF/MiniLM vectors + BM25 index
 | Structured output with Pydantic validation and retries | `backend/app/llm/client.py`, `backend/app/schemas.py` |
 | Guardrails / verification of LLM output | `backend/app/tools/verify.py`, `backend/app/services/report.py` |
 | Workflow automation (scheduled jobs) | `backend/app/services/jobs.py` |
-| Integrations (Lichess, Chess.com, Telegram, calendar) | `tools/lichess.py`, `tools/chesscom.py`, `services/delivery.py` |
+| Integrations (Lichess API, Chess.com API, calendar) | `tools/lichess.py`, `tools/chesscom.py`, `services/delivery.py` |
 | Evaluation with baselines (conditions 0/A/B/C) | `eval/run_eval.py`, `eval/results/` |
 
 **Deterministic (not generative) by design:** opening classification, Stockfish evaluation, legality,
