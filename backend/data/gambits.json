@@ -1,0 +1,136 @@
+{
+  "_comment": "Curated gambit registry (spec 8.3). trigger = moves that define the gambit; theory_lines = main lines whose moves count as gambit theory; objective_eval_cp is Stockfish's evaluation (White's point of view) at the end of the first theory line, computed by scripts/calibrate_gambits.py, null until calibrated.",
+  "gambits": [
+    {
+      "id": "kings_gambit",
+      "name": "King's Gambit",
+      "eco": "C30",
+      "side": "white",
+      "trigger": "e4 e5 f4",
+      "theory_lines": [
+        "e4 e5 f4 exf4 Nf3 g5 h4 g4 Ne5 Nf6 Bc4 d5 exd5 Bd6",
+        "e4 e5 f4 exf4 Nf3 g5 Bc4 g4 O-O gxf3 Qxf3",
+        "e4 e5 f4 exf4 Nf3 d5 exd5 Nf6",
+        "e4 e5 f4 exf4 Nf3 d6 d4 g5",
+        "e4 e5 f4 exf4 Bc4 Nf6 Nc3"
+      ],
+      "theory_end_ply": 14,
+      "objective_eval_cp": -82,
+      "soundness": "playable"
+    },
+    {
+      "id": "evans_gambit",
+      "name": "Evans Gambit",
+      "eco": "C51",
+      "side": "white",
+      "trigger": "e4 e5 Nf3 Nc6 Bc4 Bc5 b4",
+      "theory_lines": [
+        "e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 exd4 O-O Nge7 cxd4 d5",
+        "e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 d6 Qb3 Qd7",
+        "e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Be7 d4 Na5",
+        "e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bb6 a4 a6"
+      ],
+      "theory_end_ply": 16,
+      "objective_eval_cp": -8,
+      "soundness": "sound"
+    },
+    {
+      "id": "danish_gambit",
+      "name": "Danish Gambit",
+      "eco": "C21",
+      "side": "white",
+      "trigger": "e4 e5 d4 exd4 c3",
+      "theory_lines": [
+        "e4 e5 d4 exd4 c3 dxc3 Bc4 cxb2 Bxb2 d5 Bxd5 Nf6 Bxf7+ Kxf7 Qxd8",
+        "e4 e5 d4 exd4 c3 dxc3 Bc4 cxb2 Bxb2 Bb4+ Nc3 Nf6",
+        "e4 e5 d4 exd4 c3 d5 exd5 Qxd5 cxd4"
+      ],
+      "theory_end_ply": 12,
+      "objective_eval_cp": -8,
+      "soundness": "dubious"
+    },
+    {
+      "id": "smith_morra",
+      "name": "Smith-Morra Gambit",
+      "eco": "B21",
+      "side": "white",
+      "trigger": "e4 c5 d4 cxd4 c3",
+      "theory_lines": [
+        "e4 c5 d4 cxd4 c3 dxc3 Nxc3 Nc6 Nf3 d6 Bc4 e6 O-O Nf6 Qe2 Be7 Rd1 e5",
+        "e4 c5 d4 cxd4 c3 dxc3 Nxc3 e6 Nf3 Nc6 Bc4 a6 O-O Nge7",
+        "e4 c5 d4 cxd4 c3 Nf6 e5 Nd5"
+      ],
+      "theory_end_ply": 16,
+      "objective_eval_cp": 23,
+      "soundness": "playable"
+    },
+    {
+      "id": "englund_gambit",
+      "name": "Englund Gambit",
+      "eco": "A40",
+      "side": "black",
+      "trigger": "d4 e5",
+      "theory_lines": [
+        "d4 e5 dxe5 Nc6 Nf3 Qe7 Bf4 Qb4+ Bd2 Qxb2 Nc3 Bb4 Rb1 Qa3",
+        "d4 e5 dxe5 Nc6 Nf3 Qe7 Qd5 f6 exf6 Nxf6",
+        "d4 e5 dxe5 Nc6 Nf3 Qe7 Nc3 Nxe5"
+      ],
+      "theory_end_ply": 12,
+      "objective_eval_cp": 224,
+      "soundness": "dubious"
+    },
+    {
+      "id": "blackmar_diemer",
+      "name": "Blackmar-Diemer Gambit",
+      "eco": "D00",
+      "side": "white",
+      "trigger": "d4 d5 e4",
+      "theory_lines": [
+        "d4 d5 e4 dxe4 Nc3 Nf6 f3 exf3 Nxf3 Bg4 h3 Bxf3 Qxf3 c6",
+        "d4 d5 e4 dxe4 Nc3 Nf6 f3 exf3 Nxf3 e6 Bg5 Be7",
+        "d4 d5 e4 dxe4 Nc3 Nf6 f3 e5"
+      ],
+      "theory_end_ply": 14,
+      "objective_eval_cp": 0,
+      "soundness": "dubious"
+    },
+    {
+      "id": "benko_gambit",
+      "name": "Benko Gambit",
+      "eco": "A57",
+      "side": "black",
+      "trigger": "d4 Nf6 c4 c5 d5 b5",
+      "theory_lines": [
+        "d4 Nf6 c4 c5 d5 b5 cxb5 a6 bxa6 Bxa6 Nc3 d6 e4 Bxf1 Kxf1 g6",
+        "d4 Nf6 c4 c5 d5 b5 cxb5 a6 b6 Qxb6 Nc3 d6"
+      ],
+      "theory_end_ply": 16,
+      "objective_eval_cp": 78,
+      "soundness": "sound"
+    },
+    {
+      "id": "milner_barry",
+      "name": "Milner-Barry Gambit",
+      "eco": "C02",
+      "side": "white",
+      "trigger": "e4 e6 d4 d5 e5 c5 c3 Nc6 Nf3 Qb6 Bd3",
+      "theory_lines": [
+        "e4 e6 d4 d5 e5 c5 c3 Nc6 Nf3 Qb6 Bd3 cxd4 cxd4 Bd7 O-O Nxd4 Nxd4 Qxd4 Nc3"
+      ],
+      "theory_end_ply": 20,
+      "objective_eval_cp": -76,
+      "soundness": "playable"
+    },
+    {
+      "id": "queens_gambit",
+      "name": "Queen's Gambit",
+      "eco": "D06",
+      "side": "white",
+      "trigger": "d4 d5 c4",
+      "theory_lines": [],
+      "theory_end_ply": 0,
+      "objective_eval_cp": null,
+      "soundness": "not_a_real_gambit"
+    }
+  ]
+}
