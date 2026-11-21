@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import SearchBox from "../components/SearchBox.jsx";
 
 // The user's own repertoires plus an import form (PGN with variations, move list, Lichess study).
 export default function Repertoires({ repertoires, reload, onOpen, goLibrary }) {
   const [showImport, setShowImport] = useState(repertoires.length === 0);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState(null); // null = no search active
+  useEffect(() => {
+    if (!query) { setResults(null); return; }
+    api.get(`/repertoires?q=${encodeURIComponent(query)}`).then(setResults);
+  }, [query, repertoires]);
+  const shown = results ?? repertoires;
   return (
     <section>
       <div className="page-head">
@@ -16,17 +24,21 @@ export default function Repertoires({ repertoires, reload, onOpen, goLibrary }) 
           <button className="primary" onClick={() => setShowImport(!showImport)}>{showImport ? "Close" : "＋ Import"}</button>
         </div>
       </div>
+      {repertoires.length > 0 && <SearchBox onSearch={setQuery} />}
       {showImport && <ImportForm onSaved={async (id) => { await reload(); setShowImport(false); onOpen(id); }} />}
       {repertoires.length === 0 && !showImport && <p className="muted">No repertoires yet — import one or add one from the library.</p>}
+      {results && results.length === 0 && <p className="muted">Nothing matches “{query}”.</p>}
       <div className="cards">
-        {repertoires.map((r) => (
+        {shown.map((r) => (
           <RepCard key={r.id} rep={r} onOpen={() => onOpen(r.id)}
             onDelete={async () => {
               if (window.confirm(`Delete "${r.name}"? This cannot be undone.`)) {
                 await api.del(`/repertoires/${r.id}`);
                 reload();
               }
-            }} />
+            }}>
+            {r.match && <span className="tag match">{r.match}</span>}
+          </RepCard>
         ))}
       </div>
     </section>

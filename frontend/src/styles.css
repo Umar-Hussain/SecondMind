@@ -197,3 +197,12 @@ table.list tbody tr:hover, table.list tr.selected, .leaklist li.selected { backg
 .bar { height: 10px; background: var(--primary); border-radius: 3px; }
 .briefing h4 { color: var(--text-strong); margin: 16px 0 4px; }
 .board { max-width: 100%; }
+
+/* ---------- search ---------- */
+.searchbox { display: flex; align-items: center; gap: 6px; background: var(--bg-2); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 2px 8px; margin: 0 0 14px; }
+.searchbox:focus-within { border-color: var(--primary); }
+.searchbox input { flex: 1; border: none; background: transparent; padding: 9px 4px; }
+.searchbox input:focus { border: none; }
+.search-icon { color: var(--muted); font-size: 1.2rem; }
+.tag.match { background: var(--warn-dim); color: #f0b45a; }
