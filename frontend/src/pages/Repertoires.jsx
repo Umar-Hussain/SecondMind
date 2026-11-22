@@ -70,7 +70,7 @@ export function RepCard({ rep, onOpen, onDelete, children }) {
 
 export function ImportForm({ onSaved, endpoint = "/repertoires", title = "Import a repertoire", withDescription = false }) {
   const [name, setName] = useState("");
-  const [color, setColor] = useState("white");
+  const [color, setColor] = useState("auto");
   const [text, setText] = useState("");
   const [description, setDescription] = useState("");
   const [gambit, setGambit] = useState(false);
@@ -79,7 +79,7 @@ export function ImportForm({ onSaved, endpoint = "/repertoires", title = "Import
 
   async function submit() {
     setError(null);
-    const body = { name: name || "Untitled repertoire", color, intentional_gambit: gambit, description };
+    const body = { name, color, intentional_gambit: gambit, description };
     const t = text.trim();
     if (t.includes("lichess.org/study/")) body.study_url = t;
     else if (t.startsWith("[") || t.includes("{") || t.includes("(")) body.pgn = t;
@@ -97,9 +97,10 @@ export function ImportForm({ onSaved, endpoint = "/repertoires", title = "Import
     <div className="card import">
       <h3>{title}</h3>
       <div className="form">
-        <label>Name<input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Caro-Kann as Black" /></label>
+        <label>Name<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Optional: taken from the file" /></label>
         <label>Color
           <select value={color} onChange={(e) => setColor(e.target.value)}>
+            <option value="auto">Auto (from file)</option>
             <option value="white">White</option>
             <option value="black">Black</option>
           </select>
