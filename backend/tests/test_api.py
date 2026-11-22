@@ -60,10 +60,14 @@ def test_full_user_journey(api) -> None:
 
 
 def test_bad_repertoire_reports_errors(api) -> None:
+    """The legal part is kept and the illegal move is reported with its exact location."""
     h = signup(api)
     res = api.post("/repertoires", headers=h, json={"name": "bad", "color": "white",
                                                     "moves_text": "1.e4 e5 2.Ke3"}).json()
-    assert not res["saved"] and "move 2" in res["issues"][0]["location"]
+    assert res["saved"] and "move 2" in res["issues"][0]["location"]
+    nothing = api.post("/repertoires", headers=h, json={"name": "bad", "color": "white",
+                                                        "moves_text": "1.Ke3"}).json()
+    assert not nothing["saved"]
 
 
 def test_live_analysis_websocket(api) -> None:
