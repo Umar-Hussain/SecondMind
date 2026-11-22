@@ -7,6 +7,7 @@ the LLM is only used later, when the report explains the stored facts.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 import chess
@@ -22,6 +23,9 @@ from app.tools.pgn_utils import fen_key, uci_to_san
 from app.tools.games import fetch_user_games, store_games, to_normalized
 from app.tools.recommend import leak_recommender, repertoire_picker
 from app.tools.repertoire import load_tree
+
+
+Progress = Callable[[str, int, int], None]
 
 
 @dataclass
@@ -50,11 +54,13 @@ def leak_from_row(row: Leak) -> leaks.LeakOut:
                          gambit_id=row.gambit_id)
 
 
-def analyze_repertoires(session: Session, user_id: int, games: list[NormalizedGame], depth: int | None = None
-                        ) -> tuple[int, int, int]:
-    reps = session.scalars(select(Repertoire).where(Repertoire.user_id == user_id, Repertoire.status == "active"))
+def analyze_repertoires(session: Session, user_id: int, games: list[NormalizedGame], depth: int | None = None,
+                        progress: Progress | None = None) -> tuple[int, int, int]:
+    reps = list(session.scalars(select(Repertoire).where(Repertoire.user_id == user_id, Repertoire.status == "active")))
     n_rep = n_dev = n_unc = 0
-    for rep in reps:
+    for i, rep in enumerate(reps, start=1):
+        if progress:
+            progress("repertoires", i, len(reps))
         tree = load_tree(session, rep.id)
         devs, unc = deviations.analyze_repertoire(games, tree, rep.id, depth=depth,
                                                   intentional_gambit=rep.intentional_gambit,
@@ -65,21 +71,25 @@ def analyze_repertoires(session: Session, user_id: int, games: list[NormalizedGa
 
 
 def run_analysis(session: Session, user_id: int, max_games: int = 200, depth: int | None = None,
-                 fetch: bool = True) -> AnalysisSummary:
+                 fetch: bool = True, progress: Progress | None = None) -> AnalysisSummary:
+    """Fetch, store, mine leaks, analyse repertoires. ``progress(stage, done, total)`` reports
+    each step (stages: download, games, moves, repertoires) for the background job."""
     user = session.get(User, user_id)
     if user is None:
         raise KeyError(f"user {user_id} not found")
     summary = AnalysisSummary(user_id=user_id)
     if fetch:
+        if progress:
+            progress("download", 0, 1)
         fetched, warnings = fetch_user_games(user, max_games=max_games)
         summary.games_fetched, summary.warnings = len(fetched), warnings
         summary.games_new = store_games(session, user_id, fetched)
     games = user_games(session, user_id)[:max_games]
-    mined = leaks.mine_leaks(games, depth=depth, recommender=leak_recommender(depth))
+    mined = leaks.mine_leaks(games, depth=depth, recommender=leak_recommender(depth), progress=progress)
     leaks.store_leaks(session, user_id, mined)
     summary.leaks = len(mined)
     summary.repertoires_analyzed, summary.deviations, summary.uncovered = analyze_repertoires(
-        session, user_id, games, depth)
+        session, user_id, games, depth, progress)
     return summary
 
 

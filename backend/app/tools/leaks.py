@@ -213,15 +213,23 @@ def mine_leaks(
     depth: int | None = None,
     threshold: int | None = None,
     recommender: Recommender | None = None,
+    progress: Callable[[str, int, int], None] | None = None,
 ) -> list[LeakOut]:
-    """Full pipeline: analyse every game, aggregate, attach the recommended move."""
+    """Full pipeline: analyse every game, aggregate, attach the recommended move.
+
+    ``progress(stage, done, total)`` is called after every game and every recommendation
+    so a background job can show live progress."""
     games = list(games)
     findings: list[Finding] = []
-    for g in games:
+    for i, g in enumerate(games, start=1):
         findings.extend(analyze_game(g, depth=depth, threshold=threshold))
+        if progress:
+            progress("games", i, len(games))
     leaks = aggregate(findings, threshold=threshold)
     if recommender:
-        for lk in leaks:
+        for i, lk in enumerate(leaks, start=1):
+            if progress:
+                progress("moves", i, len(leaks))
             rec = recommender(lk.fen, lk.color, lk.gambit_id)
             if rec:
                 lk.theory_move = rec

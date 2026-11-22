@@ -32,10 +32,11 @@ from app.models import Briefing as BriefingRow, Game, Leak, Quiz, Repertoire, Re
 from app.schemas import (
     AnalyzeRequest, LoginRequest, ProfileUpdate, QuizAnswer, RepertoireCreate, ScoutRequest, SignupRequest,
 )
-from app.services import pipeline, report
+from app.services import analysis_jobs, compare, pipeline, report
 from app.services.briefing import prepare
 from app.services.delivery import briefing_ics
 from app.tools import deviations, engine, masters, quiz, srs
+from app.tools.annotate import annotate
 from app.tools.openings import classify
 from app.tools.pgn_utils import board_from_key, uci_to_san
 from app.tools.recommend import recommend_move
@@ -354,6 +355,39 @@ def analyze(body: AnalyzeRequest, depth: int | None = Query(None, ge=6, le=22),
     if not (user.lichess_username or user.chesscom_username):
         raise HTTPException(422, "Link a Lichess or Chess.com username in your profile first")
     return pipeline.run_analysis(session, user.id, max_games=body.max_games, depth=depth).__dict__
+
+
+@router.post("/analyze/start")
+def analyze_start(body: AnalyzeRequest, user: User = Depends(current_user)) -> dict:
+    """Start fetching and analysing in the background; poll /analyze/status for progress."""
+    if not (user.lichess_username or user.chesscom_username):
+        raise HTTPException(422, "Link a Lichess or Chess.com username first")
+    return analysis_jobs.start(user.id, max_games=body.max_games)
+
+
+@router.get("/analyze/status")
+def analyze_status(user: User = Depends(current_user)) -> dict:
+    return analysis_jobs.status(user.id) or {"state": "idle"}
+
+
+@router.get("/compare")
+def compare_deviation(repertoire_id: int, fen: str, played: str, user: User = Depends(current_user),
+                      session: Session = Depends(get_session)) -> dict:
+    """Split-screen comparison: what you play vs your repertoire vs Stockfish, with move symbols."""
+    _readable_rep(session, repertoire_id, user)
+    try:
+        return compare.compare(session, user.id, repertoire_id, fen, played)
+    except (ValueError, engine.EngineUnavailable) as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@router.get("/annotate")
+def annotate_move(fen: str, move: str, book: bool = False, user: User = Depends(current_user)) -> dict:
+    """Quality symbol for one move (practice feedback)."""
+    try:
+        return annotate(fen, move, depth=12, book=book)
+    except (ValueError, engine.EngineUnavailable) as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 @router.get("/my-openings")
