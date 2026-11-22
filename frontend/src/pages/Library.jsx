@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
-import { ImportForm, RepCard } from "./Repertoires.jsx";
+import { ImportForm } from "./Repertoires.jsx";
 import SearchBox from "../components/SearchBox.jsx";
+import MiniBoard from "../components/MiniBoard.jsx";
 
-// Shared library: repertoires published by admins. Everyone can open them read-only and
-// add a copy to their own repertoires (which they can then edit). Admins can publish and delete.
+// Shared library, laid out like Lichess's "Chess openings" page: a grid of cards, each
+// with the repertoire's name, its key move, a mini board of the opening position and a
+// side strip for the colour. Everyone can open a card read-only and add a copy to their
+// own repertoires; admins can publish and delete.
 export default function Library({ user, onOpen, reloadMine }) {
   const [items, setItems] = useState(null);
   const [filter, setFilter] = useState("all");
@@ -17,56 +20,64 @@ export default function Library({ user, onOpen, reloadMine }) {
   useEffect(() => { load(query); }, [query]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function add(rep) {
-    const copy = await api.post(`/library/${rep.id}/copy`, { name: rep.name });
+    await api.post(`/library/${rep.id}/copy`, { name: rep.name });
     await reloadMine();
     setMsg(`"${rep.name}" was added to your repertoires.`);
     load();
-    return copy;
+  }
+
+  async function remove(rep) {
+    if (window.confirm(`Remove "${rep.name}" from the library? Users' copies are kept.`)) {
+      await api.del(`/repertoires/${rep.id}`);
+      load();
+    }
   }
 
   const shown = (items || []).filter((r) => filter === "all" || r.color === filter);
   return (
-    <section>
-      <div className="page-head">
-        <div>
-          <h2>Repertoire library</h2>
-          <p className="muted">Ready-made repertoires. Open one to look through it, or add it to your repertoires and make it yours.</p>
-        </div>
-        <div className="row">
-          <div className="segmented">
-            {["all", "white", "black"].map((f) => (
-              <button key={f} className={filter === f ? "on" : ""} onClick={() => setFilter(f)}>{f === "all" ? "All" : f === "white" ? "White" : "Black"}</button>
-            ))}
-          </div>
-          {isAdmin && <button className="primary" onClick={() => setPublishing(!publishing)}>{publishing ? "Close" : "＋ Publish"}</button>}
+    <section className="fade-in">
+      <div className="lib-top">
+        <SearchBox onSearch={setQuery} placeholder="Search by name, opening, ECO code or moves (1.e4 c6)" />
+        <div className="segmented">
+          {["all", "white", "black"].map((f) => (
+            <button key={f} className={filter === f ? "on" : ""} onClick={() => setFilter(f)}>{f === "all" ? "All" : f === "white" ? "White" : "Black"}</button>
+          ))}
         </div>
       </div>
-      <SearchBox onSearch={setQuery} />
+      <div className="page-head">
+        <h1 className="page-title">Opening library</h1>
+        {isAdmin && <button className="primary" onClick={() => setPublishing(!publishing)}>{publishing ? "Close" : "＋ Publish"}</button>}
+      </div>
       {isAdmin && publishing && (
-        <ImportForm endpoint="/library" title="Publish to the library (admin)" withDescription
+        <ImportForm endpoint="/library" title="Publish to the library" withDescription
           onSaved={() => { setPublishing(false); setMsg("Published to the library."); load(); }} />
       )}
       {msg && <p className="ok">{msg}</p>}
       {items === null && <p className="muted">Loading…</p>}
       {items && shown.length === 0 && (
-        <p className="muted">
-          {query ? `Nothing matches “${query}”.` : isAdmin ? "The library is empty — publish the first repertoire." : "The library is empty for now."}
-        </p>
+        <p className="muted">{query ? `Nothing matches “${query}”.` : isAdmin ? "The library is empty. Publish the first repertoire." : "The library is empty for now."}</p>
       )}
-      <div className="cards">
+      <div className="opening-grid">
         {shown.map((r) => (
-          <RepCard key={r.id} rep={r} onOpen={() => onOpen(r.id)}
-            onDelete={isAdmin ? async () => {
-              if (window.confirm(`Remove "${r.name}" from the library? Users' copies are kept.`)) {
-                await api.del(`/repertoires/${r.id}`);
-                load();
-              }
-            } : null}>
-            {r.match && <span className="tag match">{r.match}</span>}
-            {r.in_my_repertoires
-              ? <span className="tag good">in my repertoires</span>
-              : !isAdmin && <button className="primary" onClick={() => add(r)}>＋ Add to mine</button>}
-          </RepCard>
+          <article key={r.id} className="opening-card" onClick={() => onOpen(r.id)} tabIndex={0}
+            onKeyDown={(e) => e.key === "Enter" && onOpen(r.id)} aria-label={`Open ${r.name}`}>
+            <span className={`oc-pill ${r.color}`}>{r.color === "white" ? "White" : "Black"}</span>
+            <header className="oc-head">
+              <span className="oc-name" title={r.name}>{r.name}</span>
+              <span className="oc-move">{r.preview?.key_move}</span>
+            </header>
+            <div className="oc-body">
+              <div className={`oc-strip ${r.color}`} title={`${r.color === "white" ? "White" : "Black"} repertoire · ${r.preview?.positions ?? 0} positions`} />
+              <MiniBoard fen={r.preview?.fen || "start"} orientation={r.color} width={236} />
+            </div>
+            <footer className="oc-foot" onClick={(e) => e.stopPropagation()}>
+              <span className="muted small oc-line" title={r.preview?.main_line}>{r.match || r.preview?.opening || r.description}</span>
+              {r.in_my_repertoires
+                ? <span className="tag good">added</span>
+                : !isAdmin && <button className="mini primary" onClick={() => add(r)}>＋ Add</button>}
+              {isAdmin && <button className="mini ghost danger-text" onClick={() => remove(r)} aria-label={`Delete ${r.name}`}>✕</button>}
+            </footer>
+          </article>
         ))}
       </div>
     </section>

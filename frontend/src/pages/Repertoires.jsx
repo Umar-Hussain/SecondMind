@@ -2,69 +2,109 @@ import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import SearchBox from "../components/SearchBox.jsx";
 
-// The user's own repertoires plus an import form (PGN with variations, move list, Lichess study).
+// The user's own repertoires, laid out like Lichess's study list: a side menu, a search
+// bar with sort and import buttons, and a grid of entries. Each entry shows the colour
+// icon, the name, a short meta line and the first lines ("chapters") of the repertoire.
+const SIDE = [
+  ["all", "All repertoires"],
+  ["white", "White repertoires"],
+  ["black", "Black repertoires"],
+  ["library", "From the library"],
+  ["imported", "Imported by me"],
+];
+
+function ago(iso) {
+  if (!iso) return "";
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days < 1) return "today";
+  if (days < 2) return "yesterday";
+  if (days < 31) return `${days} days ago`;
+  const months = Math.floor(days / 30);
+  return months < 12 ? `${months} month${months > 1 ? "s" : ""} ago` : `${Math.floor(months / 12)} year${months >= 24 ? "s" : ""} ago`;
+}
+
 export default function Repertoires({ repertoires, reload, onOpen, goLibrary }) {
-  const [showImport, setShowImport] = useState(repertoires.length === 0);
+  const [showImport, setShowImport] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState(null); // null = no search active
+  const [side, setSide] = useState("all");
+  const [sort, setSort] = useState("recent");
   useEffect(() => {
     if (!query) { setResults(null); return; }
     api.get(`/repertoires?q=${encodeURIComponent(query)}`).then(setResults);
   }, [query, repertoires]);
-  const shown = results ?? repertoires;
+
+  const shown = (results ?? repertoires)
+    .filter((r) => side === "all" || (side === "library" ? r.copied_from_id : side === "imported" ? !r.copied_from_id : r.color === side))
+    .slice()
+    .sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : (b.created_at || "").localeCompare(a.created_at || "")));
+
+  async function remove(r) {
+    if (window.confirm(`Delete "${r.name}"? This cannot be undone.`)) {
+      await api.del(`/repertoires/${r.id}`);
+      reload();
+    }
+  }
+
   return (
-    <section>
-      <div className="page-head">
-        <div>
-          <h2>My repertoires</h2>
-          <p className="muted">Open one to explore and edit it on the board.</p>
-        </div>
-        <div className="row">
-          <button className="ghost" onClick={goLibrary}>Browse the library</button>
-          <button className="primary" onClick={() => setShowImport(!showImport)}>{showImport ? "Close" : "＋ Import"}</button>
-        </div>
-      </div>
-      {repertoires.length > 0 && <SearchBox onSearch={setQuery} />}
-      {showImport && <ImportForm onSaved={async (id) => { await reload(); setShowImport(false); onOpen(id); }} />}
-      {repertoires.length === 0 && !showImport && <p className="muted">No repertoires yet — import one or add one from the library.</p>}
-      {results && results.length === 0 && <p className="muted">Nothing matches “{query}”.</p>}
-      <div className="cards">
-        {shown.map((r) => (
-          <RepCard key={r.id} rep={r} onOpen={() => onOpen(r.id)}
-            onDelete={async () => {
-              if (window.confirm(`Delete "${r.name}"? This cannot be undone.`)) {
-                await api.del(`/repertoires/${r.id}`);
-                reload();
-              }
-            }}>
-            {r.match && <span className="tag match">{r.match}</span>}
-          </RepCard>
+    <section className="studies fade-in">
+      <aside className="side-menu">
+        {SIDE.map(([id, label]) => (
+          <button key={id} className={side === id ? "active" : ""} onClick={() => setSide(id)}>{label}</button>
         ))}
+        <button onClick={goLibrary}>Opening library</button>
+      </aside>
+      <div className="studies-main">
+        <div className="studies-bar">
+          <SearchBox onSearch={setQuery} placeholder="Search my repertoires (name, opening, ECO or moves)" />
+          <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort">
+            <option value="recent">Recently added</option>
+            <option value="name">Name</option>
+          </select>
+          <button className="green-btn" onClick={() => setShowImport(!showImport)} aria-label="Import a repertoire" title="Import a repertoire">
+            {showImport ? "✕" : "＋"}
+          </button>
+        </div>
+        {showImport && <ImportForm onSaved={async (id) => { await reload(); setShowImport(false); onOpen(id); }} />}
+        {repertoires.length === 0 && !showImport && <p className="muted pad">No repertoires yet. Import one with ＋ or add one from the library.</p>}
+        {results && results.length === 0 && <p className="muted pad">Nothing matches “{query}”.</p>}
+        {shown.length > 0 && (
+          <div className="study-grid">
+            {shown.map((r) => <StudyItem key={r.id} rep={r} onOpen={() => onOpen(r.id)} onDelete={() => remove(r)} />)}
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
-export function RepCard({ rep, onOpen, onDelete, children }) {
+function StudyItem({ rep, onOpen, onDelete }) {
+  const chapters = rep.preview?.chapters || [];
   return (
-    <div className="card rep-card">
-      <div className={`rep-color ${rep.color}`}>{rep.color === "white" ? "♔" : "♚"}</div>
-      <div className="rep-body">
-        <h3>{rep.name}</h3>
-        <p className="muted small">
-          {rep.color === "white" ? "White" : "Black"}
-          {rep.owner ? ` · by ${rep.owner}` : ""}
-          {rep.copied_from_id ? " · from the library" : ""}
-          {rep.intentional_gambit ? " · gambit" : ""}
-        </p>
-        {rep.description && <p className="small">{rep.description}</p>}
-        <div className="row">
-          <button onClick={onOpen}>Open</button>
-          {children}
-          {onDelete && <button className="ghost danger-text" onClick={onDelete}>Delete</button>}
+    <article className="study-item" onClick={onOpen} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onOpen()}>
+      <div className="study-top">
+        <span className={`study-icon ${rep.color}`} aria-hidden="true"><i /><i /><i /><i /></span>
+        <div className="study-title">
+          <h3>{rep.name}</h3>
+          <span className="study-meta">
+            🔒 {rep.color === "white" ? "White" : "Black"} · {rep.preview?.positions ?? 0} positions · {ago(rep.created_at)}
+            {rep.match && <span className="tag match">{rep.match}</span>}
+          </span>
         </div>
+        <button className="icon study-del" title="Delete" aria-label={`Delete ${rep.name}`}
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}>✕</button>
       </div>
-    </div>
+      <div className="study-cols">
+        <ul className="chapters">
+          {chapters.length === 0 && <li className="muted">No moves yet</li>}
+          {chapters.map((c, i) => <li key={i} title={c.moves}><span className="ring" />{c.label}</li>)}
+        </ul>
+        <ul className="members">
+          <li>{rep.copied_from_id ? "📚 library copy" : "📥 imported"}</li>
+          {rep.preview?.opening && <li title={rep.preview.main_line}>♞ {rep.preview.opening.split(":")[0]}</li>}
+        </ul>
+      </div>
+    </article>
   );
 }
 

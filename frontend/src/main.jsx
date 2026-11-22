@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./styles.css";
+import "./lichess.css";
 
 // Theme: dark by default (Lichess style); the light theme is a saved per-browser preference.
 try {
