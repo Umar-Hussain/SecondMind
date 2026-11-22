@@ -115,7 +115,6 @@ export default function App() {
           </>
         )}
       </main>
-      <footer className="foot muted small">SecondMind · every move checked by Stockfish · AI explanations verified before you see them</footer>
     </div>
   );
 }
