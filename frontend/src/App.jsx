@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api, getToken, setToken } from "./api.js";
 import Brand from "./components/Brand.jsx";
 import Auth from "./pages/Auth.jsx";
+import Landing from "./pages/Landing.jsx";
 import Repertoires from "./pages/Repertoires.jsx";
 import Library from "./pages/Library.jsx";
 import Workspace from "./pages/Workspace.jsx";
@@ -29,7 +30,7 @@ export default function App() {
   const [page, setPage] = useState("repertoires");
   const [openRep, setOpenRep] = useState(null); // repertoire id shown in the workspace
   const [repertoires, setRepertoires] = useState([]);
-  const [status, setStatus] = useState(null);
+  const [authMode, setAuthMode] = useState(null); // null = landing page, else "login" / "signup"
   const [menu, setMenu] = useState(false);
 
   // Restore the session from the stored token.
@@ -42,7 +43,6 @@ export default function App() {
     window.addEventListener("secondmind:logout", onLogout);
     return () => window.removeEventListener("secondmind:logout", onLogout);
   }, []);
-  useEffect(() => { api.get("/engine/status").then(setStatus).catch(() => setStatus({ down: true })); }, []);
 
   const reloadReps = useCallback(async () => {
     if (user) setRepertoires(await api.get("/repertoires"));
@@ -70,7 +70,11 @@ export default function App() {
   }
 
   if (checking) return <div className="center muted">Loading…</div>;
-  if (!user) return <Auth onLogin={(u) => { setUser(u); setPage("repertoires"); }} />;
+  if (!user) {
+    if (!authMode) return <Landing onAuth={setAuthMode} />;
+    return <Auth key={authMode} initialMode={authMode} onBack={() => setAuthMode(null)}
+      onLogin={(u) => { setUser(u); setPage("repertoires"); setAuthMode(null); }} />;
+  }
 
   return (
     <div className="app">
@@ -82,12 +86,6 @@ export default function App() {
           ))}
         </nav>
         <div className="topbar-right">
-          {status && !status.down && (
-            <span className="status-dots" title={`Stockfish ${status.stockfish ? "ready" : "missing"} · AI ${status.llm ? status.provider : "off (templates)"}`}>
-              <span className={`dot ${status.stockfish ? "good" : "bad"}`} /> engine
-              <span className={`dot ${status.llm ? "good" : "muted"}`} /> AI
-            </span>
-          )}
           <button className={`user-btn ${page === "profile" ? "active" : ""}`} onClick={() => go("profile")}>
             {user.display_name || user.username}
             {user.role === "admin" && <span className="tag library">admin</span>}
