@@ -103,7 +103,7 @@ export default function App() {
           <>
             {page === "repertoires" && <Repertoires repertoires={repertoires} reload={reloadReps} onOpen={setOpenRep} goLibrary={() => go("library")} />}
             {page === "library" && <Library user={user} onOpen={setOpenRep} reloadMine={reloadReps} />}
-            {page === "deviations" && <Deviations repertoires={repertoires} />}
+            {page === "deviations" && <Deviations user={user} setUser={setUser} onOpen={setOpenRep} goLibrary={() => go("library")} />}
             {page === "report" && <Report user={user} />}
             {page === "scout" && <Scout user={user} />}
             {page === "train" && <Train user={user} />}
