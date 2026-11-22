@@ -117,40 +117,84 @@ def _location(game_no: int, board: chess.Board) -> str:
 _ILLEGAL_RE = re.compile(r"(illegal|invalid|ambiguous) san: '([^']+)' in (\S+ \S+ \S+ \S+ \S+ \S+)")
 
 
+_COMMAND = re.compile(r"\[%[^\]]*\]")  # Lichess / ChessBase commands: [%cal ...] [%csl ...] [%clk ...] [%eval ...]
+
+
+def clean_comment(text: str) -> str:
+    """Drop embedded arrow/clock/eval commands and squeeze whitespace; keep the human text."""
+    return " ".join(_COMMAND.sub(" ", text or "").split())
+
+
 def import_pgn(pgn_text: str, color: str, name: str = "") -> RepTree:
-    """Parse every game and every variation into one position-keyed tree."""
+    """Parse every game and every variation into one position-keyed tree.
+
+    Accepts real-world exports (Lichess studies, Chess.com, ChessBase): any headers,
+    player names, clocks, evals, arrows, NAGs, several chapters and chapters that start
+    from a set-up position. Problems are reported per chapter and never stop the rest
+    of the file from importing:
+
+    * an illegal move ends only that line (reported with its exact location),
+    * chapters in other variants (Chess960, Crazyhouse, ...) are skipped with a warning.
+    """
     tree = RepTree(color=color, name=name)
-    stream = io.StringIO(pgn_text)
+    text = pgn_text.lstrip("\ufeff").replace("\r\n", "\n").replace("\r", "\n")
+    stream = io.StringIO(text)
     game_no = 0
     while True:
-        game = chess.pgn.read_game(stream)
+        try:
+            game = chess.pgn.read_game(stream)
+        except Exception as exc:  # pragma: no cover - python-chess is lenient, keep going anyway
+            tree.issues.append(ImportIssue("error", f"game {game_no + 1}", f"could not be read: {exc}"))
+            continue
         if game is None:
             break
         game_no += 1
+        variant = game.headers.get("Variant", "Standard").strip().lower()
+        if variant not in ("standard", "from position", "chess", ""):
+            tree.issues.append(ImportIssue("warning", f"game {game_no}",
+                                           f"skipped: variant '{game.headers.get('Variant')}' is not standard chess"))
+            continue
         # python-chess records illegal moves in game.errors and stops that variation.
         for err in game.errors:
             m = _ILLEGAL_RE.search(str(err))
             if m:
                 board = chess.Board(m.group(3))
                 tree.issues.append(ImportIssue("error", _location(game_no, board),
-                                               f"{m.group(1)} move '{m.group(2)}'"))
-            else:
+                                               f"{m.group(1)} move '{m.group(2)}' (this line stops there)"))
+            elif "invalid san: '*'" not in str(err):
                 tree.issues.append(ImportIssue("error", f"game {game_no}", str(err)))
 
-        def walk(node: chess.pgn.GameNode, board: chess.Board, parent: str | None) -> None:
+        # Iterative walk (no recursion limit on very long lines).
+        stack: list[tuple[chess.pgn.GameNode, chess.Board, str | None]] = [(game, game.board(), None)]
+        while stack:
+            node, board, parent = stack.pop()
+            # Register moves in file order (the first one is the main move), then push the
+            # children in reverse so the main line is also explored first.
+            children = []
             for child in node.variations:
-                comment = (child.comment or "").strip()
-                tree.add_move(board, child.move, comment, parent, _location(game_no, board))
+                tree.add_move(board, child.move, clean_comment(child.comment), parent, _location(game_no, board))
                 nxt = board.copy()
                 nxt.push(child.move)
-                walk(child, nxt, fen_key(board))
-
-        walk(game, game.board(), None)
+                children.append((child, nxt, fen_key(board)))
+            stack.extend(reversed(children))
 
     if game_no == 0:
         tree.issues.append(ImportIssue("error", "file", "no games found in the PGN"))
     _check_color(tree)
     return tree
+
+
+def detect_color(pgn_text: str) -> str:
+    """Guess the repertoire colour: Lichess "Orientation" headers first, then branching shape."""
+    found = re.findall(r'\[Orientation\s+"(white|black)"\]', pgn_text, flags=re.I)
+    if found:
+        return max(("white", "black"), key=lambda c: sum(f.lower() == c for f in found))
+    as_white = import_pgn(pgn_text, "white")
+    as_black = import_pgn(pgn_text, "black")
+    looks_wrong = lambda t: any("looks like" in i.message for i in t.issues)  # noqa: E731
+    if looks_wrong(as_white) and not looks_wrong(as_black):
+        return "black"
+    return "white"
 
 
 def _check_color(tree: RepTree) -> None:
