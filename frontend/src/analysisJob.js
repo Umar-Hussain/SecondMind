@@ -40,7 +40,15 @@ export function useAnalysisJob(user) {
     return j;
   }, []);
 
-  return { job, start, seen, markSeen: () => setSeen(true) };
+  // Rebuild only the gap report and quizzes (no new download).
+  const startReport = useCallback(async () => {
+    setSeen(false);
+    const j = await api.post("/report/rebuild", {});
+    setJob(j);
+    return j;
+  }, []);
+
+  return { job, start, startReport, seen, markSeen: () => setSeen(true) };
 }
 
 // Call fn whenever a background analysis finishes.

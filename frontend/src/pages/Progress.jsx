@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import PageHero from "../components/PageHero.jsx";
+import { useOnAnalysisDone } from "../analysisJob.js";
 
 // Progress: headline numbers, the leaks that cost the most (frequency × loss) and a plain
 // explanation of each number. With no games analysed yet it shows an intro panel instead.
@@ -10,10 +11,12 @@ export default function Progress({ user }) {
   const [p, setP] = useState(null);
   const [leaks, setLeaks] = useState([]);
 
-  useEffect(() => {
+  const load = () => {
     api.get("/progress").then(setP).catch(() => setP({}));
     api.get("/leaks").then(setLeaks).catch(() => setLeaks([]));
-  }, [user]);
+  };
+  useEffect(load, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  useOnAnalysisDone(load); // new games change the numbers
 
   if (!p) return <p className="muted">Loading…</p>;
   const real = leaks.filter((l) => l.kind !== "gambit_note");

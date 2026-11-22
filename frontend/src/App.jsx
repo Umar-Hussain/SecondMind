@@ -88,7 +88,7 @@ export default function App() {
           ))}
         </nav>
         <div className="topbar-right">
-          <JobPill analysis={analysis} onOpen={() => { analysis.markSeen(); go("deviations"); }} />
+          <JobPill analysis={analysis} onOpen={() => { analysis.markSeen(); go(analysis.job?.kind === "report" ? "report" : "deviations"); }} />
           <button className={`user-btn ${page === "profile" ? "active" : ""}`} onClick={() => go("profile")}>
             {user.display_name || user.username}
             {user.role === "admin" && <span className="tag library">admin</span>}
@@ -107,9 +107,9 @@ export default function App() {
             {page === "repertoires" && <Repertoires repertoires={repertoires} reload={reloadReps} onOpen={setOpenRep} goLibrary={() => go("library")} />}
             {page === "library" && <Library user={user} onOpen={setOpenRep} reloadMine={reloadReps} />}
             {page === "deviations" && <Deviations user={user} setUser={setUser} onOpen={setOpenRep} goLibrary={() => go("library")} analysis={analysis} />}
-            {page === "report" && <Report user={user} />}
+            {page === "report" && <Report user={user} analysis={analysis} goDeviations={() => go("deviations")} />}
             {page === "scout" && <Scout user={user} />}
-            {page === "train" && <Train user={user} />}
+            {page === "train" && <Train user={user} goDeviations={() => go("deviations")} />}
             {page === "progress" && <Progress user={user} />}
             {page === "profile" && <Profile user={user} setUser={setUser} analysis={analysis} />}
             {page === "users" && user.role === "admin" && <Users />}
@@ -136,6 +136,6 @@ function JobPill({ analysis, onOpen }) {
   }
   if (seen) return null;
   return job.state === "done"
-    ? <button className="job-pill done" onClick={onOpen}>✓ Games ready</button>
+    ? <button className="job-pill done" onClick={onOpen}>{job.kind === "report" ? "✓ Report ready" : "✓ Games ready"}</button>
     : <button className="job-pill error" onClick={onOpen} title={job.error}>Fetch failed</button>;
 }
