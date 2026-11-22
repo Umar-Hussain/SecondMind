@@ -74,7 +74,7 @@ button.outline:hover { border-color: var(--primary); background: transparent !im
 .auth-brand { background: none !important; border: none; padding: 0; align-self: flex-start; }
 .auth-panel .brand-name, .auth-panel .brand-name b { color: #fff; }
 .auth-panel-tag { margin: 6px 0 0; opacity: .9; font-size: 1.05rem; }
-.auth-slide { margin-top: auto; animation: fade-in .45s ease both; max-width: 520px; }
+.auth-slide { margin-top: auto; animation: fade-in .45s ease backwards; max-width: 520px; }
 .auth-slide h2 { color: #fff; font-size: 2.2rem; font-weight: 700; margin-bottom: 10px; }
 .auth-slide p { font-size: 1.15rem; line-height: 1.6; margin: 0; opacity: .95; }
 .auth-dots { display: flex; gap: 8px; margin: 26px 0 auto; }
@@ -88,7 +88,7 @@ button.outline:hover { border-color: var(--primary); background: transparent !im
 .auth-side { position: relative; display: grid; place-items: center; padding: 40px 24px; }
 .auth-back { position: absolute; top: 22px; left: 24px; }
 .auth-form { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 6px; background: var(--bg-2);
-  border: 1px solid var(--line); border-radius: 12px; padding: 34px 32px; box-shadow: 0 12px 40px rgba(0,0,0,.4); animation: fade-in .35s ease both; }
+  border: 1px solid var(--line); border-radius: 12px; padding: 34px 32px; box-shadow: 0 12px 40px rgba(0,0,0,.4); animation: fade-in .35s ease backwards; }
 .auth-form h1 { font-size: 2rem; font-weight: 700; margin: 0; }
 .auth-form > p.muted { margin: 0 0 14px; }
 .auth-form label { color: var(--text-strong); font-size: .9rem; font-weight: 600; margin-top: 10px; }

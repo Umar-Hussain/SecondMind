@@ -11,7 +11,10 @@ button, a, .opening-card, .study-item, input, select {
   transition: background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .2s ease, transform .2s ease;
 }
 @keyframes fade-in { from { transform: translateY(6px); } to { transform: none; } }
-.fade-in { animation: fade-in .25s ease both; }
+/* "backwards", not "both": an animation that keeps filling its last frame still counts as a
+   transform, which makes the section the frame for position:fixed children. The board's
+   dragged piece is position:fixed, so it was drawn offset from the cursor. */
+.fade-in { animation: fade-in .25s ease backwards; }
 .pad { padding: 12px; }
 
 /* top bar: transparent, uppercase links like lichess.org */
@@ -234,7 +237,7 @@ button.green-btn:hover { background: #4f7d1c !important; }
 .tag.warn { background: rgba(216,80,0,.18); color: #ffaa66; }
 
 .dev-detail .dev-panel, .dev-pick { background: var(--bg-2); border-radius: 4px; padding: 16px 18px; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
-.dev-panel { display: flex; flex-direction: column; gap: 10px; animation: fade-in .25s ease both; }
+.dev-panel { display: flex; flex-direction: column; gap: 10px; animation: fade-in .25s ease backwards; }
 .dev-panel p { margin: 0; line-height: 1.55; }
 .dev-panel > button { align-self: flex-start; }
 .dev-detail-head h3 { margin: 0; font-size: 1.4rem; font-weight: 400; color: var(--text-strong); }
