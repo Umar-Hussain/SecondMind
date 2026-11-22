@@ -2,15 +2,13 @@ import { useState } from "react";
 import { api } from "../api.js";
 
 // Profile: linked chess accounts and rating, plus fetching and analysing games.
-export default function Profile({ user, setUser }) {
+export default function Profile({ user, setUser, analysis }) {
   const [form, setForm] = useState({
     display_name: user.display_name || "",
     lichess_username: user.lichess_username || "",
     chesscom_username: user.chesscom_username || "",
     rating: user.rating || "",
   });
-  const [busy, setBusy] = useState(false);
-  const [summary, setSummary] = useState(null);
   const [msg, setMsg] = useState(null);
   const [error, setError] = useState(null);
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
@@ -26,17 +24,18 @@ export default function Profile({ user, setUser }) {
     }
   }
 
+  // Runs on the server in the background: the user can leave this page meanwhile.
   async function analyze() {
-    setBusy(true);
     setError(null);
     try {
-      setSummary(await api.post("/analyze", { max_games: 200 }));
+      await analysis.start();
     } catch (e) {
       setError(e.message);
-    } finally {
-      setBusy(false);
     }
   }
+  const job = analysis.job;
+  const busy = job?.state === "running";
+  const summary = job?.state === "done" ? job.summary : null;
 
   return (
     <section className="narrow">
@@ -57,8 +56,10 @@ export default function Profile({ user, setUser }) {
         <h3>Analyse my games</h3>
         <p className="muted small">Fetches your recent rated games from both sites, finds opening leaks and compares them with your repertoires.</p>
         <button className="primary" onClick={analyze} disabled={busy || !(user.lichess_username || user.chesscom_username)}>
-          {busy ? "Analysing with Stockfish…" : "Fetch & analyse games"}
+          {busy ? `${job.message}… ${job.percent}%` : "Fetch & analyse games"}
         </button>
+        {busy && <p className="muted small">This runs in the background. You can keep using the other pages.</p>}
+        {job?.state === "error" && <div className="alert">{job.error}</div>}
         {summary && (
           <ul>
             <li>{summary.games_fetched} games fetched, {summary.games_new} new (duplicates across sites removed)</li>

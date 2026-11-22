@@ -3,6 +3,7 @@ import { Chess } from "chess.js";
 import { api, fenKey } from "../api.js";
 import Board, { arrow } from "../components/Board.jsx";
 import EnginePanel from "../components/EnginePanel.jsx";
+import MoveBadge, { pawns } from "../components/MoveBadge.jsx";
 
 // Repertoire workspace, laid out like a Lichess study.
 //   left   : the repertoire's lines ("chapters") and notes for the current position
@@ -29,7 +30,7 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
   const [feedback, setFeedback] = useState(null); // {kind: good | bad | hint | done, text}
   const [hint, setHint] = useState(0); // 0 none, 1 which piece, 2 show the move
   const [score, setScore] = useState({ right: 0, wrong: 0 });
-  const seen = useRef(new Set()); // positions already practised, so the opponent varies its replies
+  const seen = useRef(new Map()); // position -> times practised, so later runs explore other replies
 
   const load = useCallback(() => api.get(`/repertoires/${repId}/tree`).then(setTree).catch((e) => setError(e.message)), [repId]);
   useEffect(() => { setPath([]); setMode(null); load(); }, [load]);
@@ -89,11 +90,13 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
   const theirMoves = node ? node.opponent_moves : [];
   const endText = path.length ? "End of this line. Well played!" : "Nothing to practise yet: this repertoire has no moves here.";
 
-  // On the opponent's turn the app plays one of their stored replies (preferring replies not
-  // practised yet in this visit). On your turn it waits; with nothing stored the line is over.
+  // On the opponent's turn the app plays the stored reply practised least often, in the
+  // repertoire's own order: the first run follows the main line exactly, later runs walk
+  // through the side lines. On your turn it waits; with nothing stored the line is over.
   useEffect(() => {
     if (!practice || !tree || bad) return undefined;
-    seen.current.add(fenKey(fen));
+    const here = fenKey(fen);
+    seen.current.set(here, (seen.current.get(here) || 0) + 1);
     if (userTurn) {
       if (!myMoves.length) setFeedback({ kind: "done", text: endText });
       return undefined;
@@ -102,9 +105,8 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
       setFeedback({ kind: "done", text: endText });
       return undefined;
     }
-    const fresh = theirMoves.filter((m) => !seen.current.has(keyAfter(fen, m.uci)));
-    const pool = fresh.length ? fresh : theirMoves;
-    const pick = pool[Math.floor(Math.random() * pool.length)];
+    const visits = (m) => seen.current.get(keyAfter(fen, m.uci)) || 0;
+    const pick = theirMoves.reduce((best, m) => (visits(m) < visits(best) ? m : best), theirMoves[0]);
     const t = setTimeout(() => setPath((p) => [...p, { uci: pick.uci, san: pick.san }]), path.length ? 550 : 350);
     return () => clearTimeout(t);
   }, [practice, fen, bad, tree]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -114,13 +116,21 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
     if (bad || !userTurn || !myMoves.length) return;
     if (myMoves.includes(m.uci)) {
       setScore((x) => ({ ...x, right: x.right + 1 }));
-      setFeedback({ kind: "good", text: m.uci === node.user_move ? `${m.san} is right.` : `${m.san} is right (one of your alternatives).` });
+      setFeedback({ kind: "good", badge: { kind: "book", symbol: "📖", label: "Book move" },
+        text: m.uci === node.user_move ? `${m.san} is your repertoire move.` : `${m.san} is right (one of your alternatives).` });
       setPath([...path, { uci: m.uci, san: m.san }]);
     } else {
       setScore((x) => ({ ...x, wrong: x.wrong + 1 }));
-      setFeedback({ kind: "bad", text: `${m.san} is not in your repertoire. Try again.` });
+      setFeedback({ kind: "bad", uci: m.uci, text: `${m.san} is not in your repertoire. Try again.` });
       setBad({ uci: m.uci, san: m.san });
       setTimeout(() => setBad(null), 900);
+      // Real feedback: how good was the move anyway? (Stockfish symbol, filled in when it arrives.)
+      const at = fen;
+      api.get(`/annotate?fen=${encodeURIComponent(at)}&move=${m.uci}`).then((a) => setFeedback((f) => (f?.uci === m.uci
+        ? { ...f, badge: a, text: a.loss_cp <= 30
+          ? `${m.san} is a good move, but it is not in your repertoire. Try again.`
+          : `${m.san} costs ${pawns(a.loss_cp).replace("+", "")} pawns and is not in your repertoire. Try again.` }
+        : f))).catch(() => {});
     }
   }
 
@@ -307,7 +317,11 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
             <p className="practice-turn">
               {feedback?.kind === "done" ? "Line complete" : userTurn ? `Your move (${tree.color})` : "Opponent is moving…"}
             </p>
-            {feedback && <p className={`practice-msg ${feedback.kind}`} role="status">{feedback.text}</p>}
+            {feedback && (
+              <p className={`practice-msg ${feedback.kind}`} role="status">
+                {feedback.badge && <MoveBadge a={feedback.badge} withLabel />} {feedback.text}
+              </p>
+            )}
             {!feedback && <p className="muted small">The opponent's moves are played for you. Play your repertoire move on the board.</p>}
             {node?.comment && userTurn && feedback?.kind !== "bad" && <p className="practice-note">{node.comment}</p>}
             <div className="practice-score">

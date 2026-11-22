@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../api.js";
 import Board, { arrow } from "../components/Board.jsx";
+import PageHero from "../components/PageHero.jsx";
 
 const BADGE = { master: "master choice", engine: "engine choice", repertoire: "repertoire move" };
 
@@ -25,11 +26,30 @@ export default function Report({ user }) {
   }
 
   const item = report?.leaks[sel];
+  if (!report || report.leaks.length === 0) {
+    return (
+      <section>
+        <PageHero title="Gap report" fen="rnbqkb1r/pppp1ppp/5n2/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 2 3"
+          arrows={[["d1", "f3", "rgba(204,51,51,.85)"], ["d2", "d3", "rgba(21,120,27,.85)"]]}
+          text={report
+            ? "No opening leaks found yet. Fetch your games on the Deviations page first, then build the report again."
+            : "Your most costly opening habits, ranked by how often they happen and how much they cost, with the move to play instead and a short, fact-checked explanation."}
+          steps={[["Fetch your games", "On the Deviations page (runs in the background)."],
+            ["Build the report", "Stockfish finds the moves that lose the most, again and again."],
+            ["Learn the fix", "Each leak shows your move in red and the better move in green."]]}>
+          <button className="primary big" onClick={load} disabled={busy}>{busy ? "Building report…" : "Build my report"}</button>
+          {error && <div className="alert">{error}</div>}
+        </PageHero>
+      </section>
+    );
+  }
   return (
     <section>
-      <h2>Gap report</h2>
-      <button onClick={load} disabled={busy}>{busy ? "Building report…" : "Build my report"}</button>
-      {error && <div className="error">{error}</div>}
+      <div className="page-head">
+        <h2>Gap report</h2>
+        <button onClick={load} disabled={busy}>{busy ? "Building report…" : "Rebuild"}</button>
+      </div>
+      {error && <div className="alert">{error}</div>}
       {report && (
         <div className="grid2">
           <ul className="leaklist">

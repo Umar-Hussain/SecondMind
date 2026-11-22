@@ -47,13 +47,13 @@ export default function Board({ fen, orientation = "white", arrows = [], onMove,
   return (
     <div className="board">
       <div className="board-row">
-      {showBar && <EvalBar evaluation={evaluation} orientation={orientation} height={size} />}
+      {showBar && <EvalBar evaluation={evaluation} orientation={orientation} height={width || size} />}
       <Chessboard
         position={position}
         onPieceDrop={onDrop}
         isDraggablePiece={canDrag ? ({ piece }) => canDrag(piece) : undefined}
         boardOrientation={orientation}
-        boardWidth={size}
+        boardWidth={width || size}
         customArrows={arrows}
         customLightSquareStyle={LIGHT}
         customDarkSquareStyle={DARK}

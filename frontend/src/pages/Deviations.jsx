@@ -2,10 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { Chess } from "chess.js";
 import { api, fenKey } from "../api.js";
 import Board, { arrow } from "../components/Board.jsx";
+import PageHero from "../components/PageHero.jsx";
+import CompareView from "../components/CompareView.jsx";
+import { useOnAnalysisDone } from "../analysisJob.js";
 
 // Deviations page as a guided flow:
 //   1. link a Lichess and/or Chess.com username (public names only, never a password);
-//   2. fetch the games and check them against every repertoire (POST /analyze);
+//   2. fetch the games and check them against every repertoire (a background job: the user
+//      can leave the page, the top bar shows progress, this page reloads when it finishes);
 //   3. review: the openings you actually play, whether a repertoire covers them, and for each
 //      opening the exact position where the game left the repertoire, shown on the board.
 // Red arrow = what you played, green = what your repertoire says, blue = the engine-checked
@@ -22,12 +26,13 @@ const STATE_LABEL = {
   none: "no repertoire",
 };
 
-export default function Deviations({ user, setUser, onOpen, goLibrary }) {
+// Example position for the intro panels: 1.e4 c6 2.d4 d5 3.e5, your Bf5 vs the Bg4 you played.
+const HERO_FEN = "rnbqkbnr/pp2pppp/2p5/3pP3/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 0 3";
+
+export default function Deviations({ user, setUser, onOpen, goLibrary, analysis }) {
   const linked = Boolean(user.lichess_username || user.chesscom_username);
   const [editing, setEditing] = useState(!linked);
   const [overview, setOverview] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
   const [sel, setSel] = useState(null); // index of the selected opening
   const [exitIdx, setExitIdx] = useState(0);
@@ -36,18 +41,19 @@ export default function Deviations({ user, setUser, onOpen, goLibrary }) {
   const loadOverview = useCallback(() => api.get("/my-openings").then(setOverview).catch((e) => setError(e.message)), []);
   useEffect(() => { loadOverview(); }, [loadOverview]);
 
+  useOnAnalysisDone(() => { loadOverview(); setSel(null); });
+  // Seeing the finished result on this page clears the "Games ready" pill in the top bar.
+  useEffect(() => { if (analysis.job?.state !== "running") analysis.markSeen(); }, [analysis.job?.state]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const job = analysis.job;
+  const busy = job?.state === "running";
+  const summary = job?.state === "done" ? job.summary : null;
   async function fetchGames() {
-    setBusy(true);
     setError(null);
-    setSummary(null);
     try {
-      setSummary(await api.post("/analyze", { max_games: 200 }));
-      await loadOverview();
-      setSel(null);
+      await analysis.start();
     } catch (e) {
       setError(e.message);
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -66,9 +72,18 @@ export default function Deviations({ user, setUser, onOpen, goLibrary }) {
         ))}
       </ol>
 
-      {editing ? (
+      {editing && step === 1 ? (
+        <PageHero title="Which account do you play on?" fen={HERO_FEN} orientation="black"
+          arrows={[["c8", "g4", "rgba(204,51,51,.85)"], ["c8", "f5", "rgba(21,120,27,.85)"]]}
+          text="SecondMind downloads your recent games, finds the openings you really play and shows the exact move where each game left your repertoire."
+          steps={[["Link your account", "Your public Lichess or Chess.com name. We never ask for a password."],
+            ["Fetch your games", "Runs in the background, so you can keep using the app."],
+            ["Fix your leaks", "See your move next to your repertoire move, with Stockfish's verdict."]]}>
+          <AccountForm bare user={user} onSaved={(u) => { setUser({ ...user, ...u }); setEditing(false); }} onCancel={null} />
+        </PageHero>
+      ) : editing ? (
         <AccountForm user={user} onSaved={(u) => { setUser({ ...user, ...u }); setEditing(false); }}
-          onCancel={linked ? () => setEditing(false) : null} />
+          onCancel={() => setEditing(false)} />
       ) : (
         <div className="dev-accounts">
           <div className="dev-acc-names">
@@ -76,12 +91,13 @@ export default function Deviations({ user, setUser, onOpen, goLibrary }) {
             {user.chesscom_username && <span className="acc-chip chesscom">Chess.com · <b>{user.chesscom_username}</b></span>}
             <button className="link" onClick={() => setEditing(true)}>Change</button>
           </div>
-          <button className="primary" onClick={fetchGames} disabled={busy}>
+          {step === 3 && <button className="primary" onClick={fetchGames} disabled={busy}>
             {busy ? "Fetching and checking games…" : overview?.games ? "Fetch new games" : "Fetch my games"}
-          </button>
+          </button>}
         </div>
       )}
-      {busy && <p className="muted small">Downloading your recent games and checking every opening with Stockfish. This can take a minute.</p>}
+      {busy && <JobProgress job={job} />}
+      {job?.state === "error" && <div className="alert">The fetch failed: {job.error}</div>}
       {summary && (
         <p className="ok small">
           {summary.games_fetched} games fetched ({summary.games_new} new). Checked against {summary.repertoires_analyzed} repertoire(s).
@@ -89,11 +105,18 @@ export default function Deviations({ user, setUser, onOpen, goLibrary }) {
       )}
       {summary?.warnings?.map((w) => <div key={w} className="alert">{w}</div>)}
       {error && <div className="alert">{error}</div>}
-      {step === 2 && !busy && !editing && (
-        <div className="dev-empty">
-          Press <b>Fetch my games</b> to download your recent games. We then check which openings you play and
-          where each game left your repertoire.
-        </div>
+      {step === 2 && !editing && (
+        <PageHero title={busy ? "Fetching your games…" : "Ready to fetch your games"} fen={HERO_FEN} orientation="black"
+          arrows={[["c8", "g4", "rgba(204,51,51,.85)"], ["c8", "f5", "rgba(21,120,27,.85)"]]}
+          text={busy
+            ? "This runs on our server. Feel free to open other pages: the bar at the top shows the progress and this page fills in by itself."
+            : "We download up to 200 of your recent games, check them with Stockfish and compare every opening with your repertoires."}
+          steps={[["Download", "Your recent rated games from the linked sites."],
+            ["Check", "Stockfish looks at each opening move you played."],
+            ["Compare", "Every game is matched against your repertoires."]]}>
+          {!busy && <button className="primary big" onClick={fetchGames}>Fetch my games</button>}
+          {busy && <JobProgress job={job} big />}
+        </PageHero>
       )}
 
       {step === 3 && (
@@ -163,7 +186,7 @@ export default function Deviations({ user, setUser, onOpen, goLibrary }) {
 }
 
 // Step 1: public usernames only.
-function AccountForm({ user, onSaved, onCancel }) {
+function AccountForm({ user, onSaved, onCancel, bare = false }) {
   const [form, setForm] = useState({ lichess_username: user.lichess_username || "", chesscom_username: user.chesscom_username || "" });
   const [error, setError] = useState(null);
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
@@ -184,7 +207,7 @@ function AccountForm({ user, onSaved, onCancel }) {
 
   return (
     <form className="dev-account-form" onSubmit={save}>
-      <p className="dev-pick-title">Which account do you play on?</p>
+      {!bare && <p className="dev-pick-title">Which account do you play on?</p>}
       <p className="muted small">We only need your public username to download your games. We never ask for your chess-site password.</p>
       <div className="dev-acc-inputs">
         <label>Lichess username<input value={form.lichess_username} onChange={set("lichess_username")} placeholder="your Lichess name" /></label>
@@ -291,10 +314,12 @@ function OpeningDetail({ o, exitIdx, setExitIdx, onOpen, goLibrary, reload }) {
           ))}
         </div>
       )}
-      <Board fen={exit.fen} orientation={o.color} explore={false} max={boardMax()} arrows={arrows.filter(Boolean)} canDrag={() => false} />
+      {!youLeft && <Board fen={exit.fen} orientation={o.color} explore={false} max={boardMax()} arrows={arrows.filter(Boolean)} canDrag={() => false} />}
       <p className="dev-line muted small">After {exit.line || "the first move"}</p>
       {youLeft ? (
         <>
+          {/* Split screen: your move and how your games went on | your repertoire line; then Stockfish's suggestion. */}
+          <CompareView key={exit.fen + exit.played} repertoireId={exit.repertoire_id} fen={exit.fen} played={exit.played} color={o.color} />
           <p className="dev-say">
             In <b>{exit.games}</b> game{exit.games === 1 ? "" : "s"} you played <b className="bad">{exit.played_san}</b> here.
             Your repertoire plays <b className="good">{exit.repertoire_san}</b>.
@@ -357,4 +382,14 @@ function keyAfter(fen, uci) {
   const g = new Chess(fen);
   g.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] });
   return fenKey(g.fen());
+}
+
+// Live progress of the background fetch.
+function JobProgress({ job, big }) {
+  return (
+    <div className={`job-progress ${big ? "big" : ""}`} role="status" aria-live="polite">
+      <div className="job-progress-top"><span>{job.message}</span><b>{job.percent}%</b></div>
+      <div className="job-progress-bar"><span style={{ width: `${Math.max(3, job.percent)}%` }} /></div>
+    </div>
+  );
 }

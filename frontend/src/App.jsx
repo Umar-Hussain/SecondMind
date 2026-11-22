@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, getToken, setToken } from "./api.js";
+import { useAnalysisJob } from "./analysisJob.js";
 import Brand from "./components/Brand.jsx";
 import Auth from "./pages/Auth.jsx";
 import Landing from "./pages/Landing.jsx";
@@ -32,6 +33,7 @@ export default function App() {
   const [repertoires, setRepertoires] = useState([]);
   const [authMode, setAuthMode] = useState(null); // null = landing page, else "login" / "signup"
   const [menu, setMenu] = useState(false);
+  const analysis = useAnalysisJob(user); // background game fetch, survives page changes
 
   // Restore the session from the stored token.
   useEffect(() => {
@@ -86,6 +88,7 @@ export default function App() {
           ))}
         </nav>
         <div className="topbar-right">
+          <JobPill analysis={analysis} onOpen={() => { analysis.markSeen(); go("deviations"); }} />
           <button className={`user-btn ${page === "profile" ? "active" : ""}`} onClick={() => go("profile")}>
             {user.display_name || user.username}
             {user.role === "admin" && <span className="tag library">admin</span>}
@@ -103,16 +106,36 @@ export default function App() {
           <>
             {page === "repertoires" && <Repertoires repertoires={repertoires} reload={reloadReps} onOpen={setOpenRep} goLibrary={() => go("library")} />}
             {page === "library" && <Library user={user} onOpen={setOpenRep} reloadMine={reloadReps} />}
-            {page === "deviations" && <Deviations user={user} setUser={setUser} onOpen={setOpenRep} goLibrary={() => go("library")} />}
+            {page === "deviations" && <Deviations user={user} setUser={setUser} onOpen={setOpenRep} goLibrary={() => go("library")} analysis={analysis} />}
             {page === "report" && <Report user={user} />}
             {page === "scout" && <Scout user={user} />}
             {page === "train" && <Train user={user} />}
             {page === "progress" && <Progress user={user} />}
-            {page === "profile" && <Profile user={user} setUser={setUser} />}
+            {page === "profile" && <Profile user={user} setUser={setUser} analysis={analysis} />}
             {page === "users" && user.role === "admin" && <Users />}
           </>
         )}
       </main>
     </div>
   );
+}
+
+// Top-bar status of the background game fetch: a progress bar while it runs, then a
+// "games ready" button until the user opens the result.
+function JobPill({ analysis, onOpen }) {
+  const { job, seen } = analysis;
+  if (!job) return null;
+  if (job.state === "running") {
+    return (
+      <button className="job-pill running" onClick={onOpen} title={job.message}>
+        <span className="job-spin" aria-hidden="true" />
+        <span className="job-text">{job.percent}%</span>
+        <span className="job-bar"><span style={{ width: `${job.percent}%` }} /></span>
+      </button>
+    );
+  }
+  if (seen) return null;
+  return job.state === "done"
+    ? <button className="job-pill done" onClick={onOpen}>✓ Games ready</button>
+    : <button className="job-pill error" onClick={onOpen} title={job.error}>Fetch failed</button>;
 }

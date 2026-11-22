@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import Board from "../components/Board.jsx";
+import PageHero from "../components/PageHero.jsx";
 
 // Page 4: answer quizzes by moving a piece; SM-2 schedules the next review.
 export default function Train({ user }) {
@@ -34,12 +35,30 @@ export default function Train({ user }) {
   }
 
   const orientation = quiz && quiz.fen.split(" ")[1] === "b" ? "black" : "white";
+  if (!quiz) {
+    return (
+      <section>
+        <PageHero title="Train" fen="rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3"
+          arrows={[["e4", "e5", "rgba(21,120,27,.85)"]]}
+          text={note || "Short quizzes built from your own games: the positions where you went wrong. Each one comes back just before you would forget it."}
+          steps={[["Create quizzes", "From the leaks found in your games."],
+            ["Answer on the board", "Play the move you think is right."],
+            ["Review on time", "Correct answers come back later, wrong ones sooner (spaced repetition)."]]}>
+          <button className="primary big" onClick={generate} disabled={busy}>{busy ? "Creating quizzes…" : "Create quizzes from my leaks"}</button>
+          <button className="big outline" onClick={next}>Next due quiz</button>
+        </PageHero>
+      </section>
+    );
+  }
   return (
     <section>
-      <h2>Train</h2>
-      <button onClick={generate} disabled={busy}>{busy ? "Creating quizzes…" : "Create quizzes from my leaks"}</button>{" "}
-      <button onClick={next}>Next due quiz</button>
-      {!quiz && <p className="muted">{note}</p>}
+      <div className="page-head">
+        <h2>Train</h2>
+        <div className="row-gap">
+          <button onClick={generate} disabled={busy}>{busy ? "Creating quizzes…" : "Create more quizzes"}</button>
+          <button onClick={next}>Next due quiz</button>
+        </div>
+      </div>
       {quiz && (
         <div className="grid2">
           <Board fen={quiz.fen} orientation={orientation} explore={!result} onMove={onMove} />

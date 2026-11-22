@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Chess } from "chess.js";
 import { api, fenKey } from "../api.js";
+import PageHero from "../components/PageHero.jsx";
 import Board from "../components/Board.jsx";
 import EnginePanel from "../components/EnginePanel.jsx";
 import { buildTree, positionData, scoreColor } from "../engine/openingTree.js";
@@ -166,14 +167,7 @@ export default function Scout() {
     setTab("moves");
   }
 
-  return (
-    <section>
-      <div className="page-head">
-        <div>
-          <h2>Prepare for an opponent</h2>
-          <p className="muted">Load their games, walk through what they play on the board, and see what to play against it.</p>
-        </div>
-      </div>
+  const form = (
       <form className="form" onSubmit={load}>
         <label>Opponent<input value={opponent} onChange={(e) => setOpponent(e.target.value)} placeholder="Lichess or Chess.com username" /></label>
         <label>Site
@@ -183,6 +177,34 @@ export default function Scout() {
         </label>
         <button className="primary" disabled={loading || !opponent.trim()}>{loading ? "Loading games…" : "Load games"}</button>
       </form>
+  );
+
+  // Before any games are loaded the page explains itself instead of sitting empty.
+  if (!data) {
+    return (
+      <section>
+        <PageHero title="Prepare for an opponent" fen="r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3"
+          arrows={[["f1", "b5", "rgba(21,120,27,.85)"], ["f1", "c4", "rgba(54,146,231,.7)"]]}
+          text="Type your next opponent's username. You will see the openings they really play, where they go wrong, and what you should play against them."
+          steps={[["Load their games", "Up to 200 recent games from Lichess or Chess.com."],
+            ["Walk their repertoire", "Their moves on the board, with how often and how well they score."],
+            ["Get your plan", "Arrows show your repertoire move, the move that punishes their mistakes and the engine's choice."]]}>
+          {form}
+          {error && <div className="alert">{error}</div>}
+        </PageHero>
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <div className="page-head">
+        <div>
+          <h2>Prepare for an opponent</h2>
+          <p className="muted">Load their games, walk through what they play on the board, and see what to play against it.</p>
+        </div>
+      </div>
+      {form}
       {error && <div className="alert">{error}</div>}
 
       {data && tree && (
