@@ -168,8 +168,24 @@ def admin_reset_password(user_id: int, body: PasswordReset, admin: User = Depend
 
 def _save_rep(session: Session, owner_id: int, name: str, color: str, pgn: str | None, moves_text: str | None,
               study_url: str | None, intentional_gambit: bool, library: bool = False, description: str = "") -> dict:
-    if color not in ("white", "black"):
-        raise HTTPException(422, "color must be white or black")
+    if color not in ("white", "black", "auto"):
+        raise HTTPException(422, "color must be white, black or auto")
+    if study_url and not pgn:
+        from app.tools.lichess import export_study_pgn
+
+        pgn, study_url = export_study_pgn(study_url), None
+    if color == "auto":
+        from app.tools.repertoire import detect_color
+
+        color = detect_color(pgn) if pgn else "white"
+    if not name.strip() and pgn:
+        # Use the study / event name from the file when the user left the name empty.
+        import re as _re
+
+        found = {k: v for k, v in _re.findall(r'\[(StudyName|Event)\s+"([^"]+)"\]', pgn)}
+        title = found.get("StudyName") or found.get("Event", "").split(":")[0]  # study name first
+        name = title.strip() or f"{color.capitalize()} repertoire"
+    name = (name.strip() or f"{color.capitalize()} repertoire")[:120]
     if pgn:
         tree, source = import_pgn(pgn, color, name), "pgn"
     elif moves_text:
@@ -179,12 +195,15 @@ def _save_rep(session: Session, owner_id: int, name: str, color: str, pgn: str |
     else:
         raise HTTPException(422, "provide pgn, moves_text or study_url")
     issues = [{"level": i.level, "location": i.location, "message": i.message} for i in tree.issues]
-    if tree.errors:
-        return {"id": None, "saved": False, "issues": issues}
+    if not any(n.user_move or n.opponent_moves for n in tree.nodes.values()):
+        # Nothing usable at all: report why instead of saving an empty repertoire.
+        return {"id": None, "saved": False, "issues": issues or [
+            {"level": "error", "location": "file", "message": "no moves found"}]}
     rep = save_tree(session, owner_id, tree, source, pgn or moves_text or "", intentional_gambit)
     rep.is_library, rep.description = library, description
     session.commit()
-    return {"id": rep.id, "saved": True, "issues": issues, "nodes": len(tree.nodes)}
+    return {"id": rep.id, "saved": True, "issues": issues, "nodes": len(tree.nodes), "color": color,
+            "name": rep.name}
 
 
 @router.post("/repertoires")

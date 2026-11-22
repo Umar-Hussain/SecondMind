@@ -304,8 +304,8 @@ class ProfileUpdate(BaseModel):
 class RepertoireCreate(BaseModel):
     user_id: int | None = None  # ignored: the logged-in user owns it
     description: str = ""
-    name: str
-    color: Color
+    name: str = ""
+    color: Literal["white", "black", "auto"] = "auto"  # auto: read it from the file
     pgn: str | None = None
     moves_text: str | None = None
     study_url: str | None = None
