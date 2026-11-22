@@ -66,6 +66,39 @@ def init_db(bind: Engine | None = None) -> None:
     target = bind or engine
     Base.metadata.create_all(bind=target)
     _add_missing_columns(target)
+    _fix_game_uniqueness(target)
+
+
+def _fix_game_uniqueness(bind: Engine) -> None:
+    """Replace the old ``UNIQUE (source, external_id)`` rule on ``games`` with the per-user rule.
+
+    Databases created before games were stored per user still say a game may exist only once
+    in the whole table, so a second user fetching the same public game crashed the analysis.
+    Postgres can drop the constraint in place; SQLite cannot, so the table is rebuilt with
+    the documented create-copy-drop-rename procedure.
+    """
+    from sqlalchemy import inspect, text
+    from sqlalchemy.schema import CreateTable
+
+    insp = inspect(bind)
+    if not insp.has_table("games"):
+        return
+    old = [u for u in insp.get_unique_constraints("games") if sorted(u["column_names"]) == ["external_id", "source"]]
+    if not old:
+        return
+    table = Base.metadata.tables["games"]
+    cols = ", ".join(f'"{c.name}"' for c in table.columns)
+    with bind.begin() as conn:
+        if bind.dialect.name == "sqlite":
+            ddl = str(CreateTable(table).compile(dialect=bind.dialect)).replace("CREATE TABLE games", "CREATE TABLE games_new", 1)
+            conn.execute(text(ddl))
+            conn.execute(text(f"INSERT INTO games_new ({cols}) SELECT {cols} FROM games"))
+            conn.execute(text("DROP TABLE games"))
+            conn.execute(text("ALTER TABLE games_new RENAME TO games"))
+        else:
+            for u in old:
+                conn.execute(text(f'ALTER TABLE games DROP CONSTRAINT "{u["name"]}"'))
+            conn.execute(text("ALTER TABLE games ADD CONSTRAINT uq_game_user_source_ext UNIQUE (user_id, source, external_id)"))
 
 
 def _add_missing_columns(bind: Engine) -> None:

@@ -356,6 +356,12 @@ def analyze(body: AnalyzeRequest, depth: int | None = Query(None, ge=6, le=22),
     return pipeline.run_analysis(session, user.id, max_games=body.max_games, depth=depth).__dict__
 
 
+@router.get("/my-openings")
+def my_openings(user: User = Depends(current_user), session: Session = Depends(get_session)) -> dict:
+    """The user's fetched games grouped by opening, each checked against their repertoires."""
+    return pipeline.opening_overview(session, user.id)
+
+
 @router.get("/leaks")
 def get_leaks(user: User = Depends(current_user), session: Session = Depends(get_session)) -> list[dict]:
     out = []
