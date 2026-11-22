@@ -11,7 +11,7 @@ const DARK = { backgroundColor: "#b58863" };
 // gets the attempted move. In explore mode the board also keeps its own position
 // so the user can try lines without changing the parent state.
 export default function Board({ fen, orientation = "white", arrows = [], onMove, explore = true, width, highlight,
-                                evaluation }) {
+                                evaluation, max = 520 }) {
   const showBar = evaluation !== undefined; // pass null while the engine is still thinking
   const [position, setPosition] = useState(fen);
   const [size, setSize] = useState(width || 440);
@@ -19,11 +19,11 @@ export default function Board({ fen, orientation = "white", arrows = [], onMove,
   useEffect(() => setPosition(fen), [fen]);
   useEffect(() => {
     if (width) return undefined;
-    const fit = () => setSize(Math.max(260, Math.min(520, window.innerWidth - (showBar ? 70 : 40))));
+    const fit = () => setSize(Math.max(260, Math.min(max, window.innerWidth - (showBar ? 70 : 40), window.innerHeight - 120)));
     fit();
     window.addEventListener("resize", fit);
     return () => window.removeEventListener("resize", fit);
-  }, [width]);
+  }, [width, max]);
 
   function onDrop(from, to, piece) {
     const game = new Chess(position);

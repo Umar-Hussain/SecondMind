@@ -8,7 +8,8 @@ import { browserEngineSupported, createBrowserEngine } from "../engine/browserEn
 // The engine runs in the visitor's browser (Stockfish WebAssembly) so the free server
 // only does batch analysis. If WebAssembly is unavailable it falls back to the
 // server's WebSocket stream. A new FEN cancels the previous search either way.
-export default function EnginePanel({ fen, playerColor = "white", hideMasters = false, onInfo }) {
+export default function EnginePanel({ fen, playerColor = "white", hideMasters = false, onInfo, compact = false }) {
+  const [on, setOn] = useState(true); // compact mode has a Lichess-style on/off switch
   const [info, setInfo] = useState(null);
   const [masters, setMasters] = useState(null);
   const [error, setError] = useState(null);
@@ -80,6 +81,32 @@ export default function EnginePanel({ fen, playerColor = "white", hideMasters = 
   const whiteShare = Math.max(2, Math.min(98, 50 + cpWhite / 12));
   const fmt = (cp, mate) => (mate != null ? `M${mate}` : (cp / 100 >= 0 ? "+" : "") + (cp / 100).toFixed(2));
   const playerCp = playerColor === "white" ? cpWhite : -cpWhite;
+
+  if (compact) {
+    return (
+      <div className="ceval">
+        <div className="ceval-head">
+          <button className={`ceval-switch ${on ? "on" : ""}`} onClick={() => setOn(!on)} role="switch" aria-checked={on}
+            aria-label="Show engine lines"><span /></button>
+          <span className="ceval-score">{info ? fmt(info.cp_white, info.mate).replace(/(\.\d)\d$/, "$1") : "…"}</span>
+          <span className="ceval-info">
+            <span>Stockfish {where === "browser" ? "(your browser)" : "(server)"}</span>
+            <span className="muted">{info ? `depth ${info.depth}` : "thinking…"}</span>
+          </span>
+        </div>
+        {error && <div className="error small">{error}</div>}
+        {on && info && (
+          <div className="ceval-lines">
+            {info.lines.map((l, i) => (
+              <div key={i} className="ceval-line" title={l.san_pv.join(" ")}>
+                <b>{fmt(l.cp_white, l.mate)}</b> {l.san_pv.join(" ")}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="engine">
