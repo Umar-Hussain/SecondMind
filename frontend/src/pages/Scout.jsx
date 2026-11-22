@@ -46,6 +46,7 @@ function ResultBar({ win, draw, loss }) {
 
 // Prepare: explore an opponent's games on the board and see suggestions as arrows.
 export default function Scout() {
+  const [evaluation, setEvaluation] = useState(null); // live engine score for the board's bar
   const [opponent, setOpponent] = useState("");
   const [platform, setPlatform] = useState("lichess");
   const [data, setData] = useState(null);
@@ -236,7 +237,7 @@ export default function Scout() {
 
           {/* ---------- centre: board ---------- */}
           <div className="ws-center">
-            <Board fen={fen} orientation={flipped ? color : you} explore={false} arrows={arrows}
+            <Board evaluation={evaluation} fen={fen} orientation={flipped ? color : you} explore={false} arrows={arrows}
               highlight={path.length ? path[path.length - 1].uci : null} onMove={(m) => !m.reset && play(m.uci, m.san)} />
             <div className="legend">
               {theirTurn ? (
@@ -338,7 +339,7 @@ export default function Scout() {
                 {briefing.extra_lines.length === 0 && !briefing.novelty && <li className="muted small">No sound extra line found.</li>}
               </ul>
             )}
-            <EnginePanel fen={fen} playerColor={you} hideMasters />
+            <EnginePanel onInfo={setEvaluation} fen={fen} playerColor={you} hideMasters />
           </aside>
         </div>
       )}

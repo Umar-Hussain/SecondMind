@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
+import EvalBar from "./EvalBar.jsx";
 
 // Lichess "brown" board colours.
 const LIGHT = { backgroundColor: "#f0d9b5" };
@@ -9,14 +10,16 @@ const DARK = { backgroundColor: "#b58863" };
 // Interactive board. Moves are validated client-side with chess.js; the parent
 // gets the attempted move. In explore mode the board also keeps its own position
 // so the user can try lines without changing the parent state.
-export default function Board({ fen, orientation = "white", arrows = [], onMove, explore = true, width, highlight }) {
+export default function Board({ fen, orientation = "white", arrows = [], onMove, explore = true, width, highlight,
+                                evaluation }) {
+  const showBar = evaluation !== undefined; // pass null while the engine is still thinking
   const [position, setPosition] = useState(fen);
   const [size, setSize] = useState(width || 440);
 
   useEffect(() => setPosition(fen), [fen]);
   useEffect(() => {
     if (width) return undefined;
-    const fit = () => setSize(Math.max(280, Math.min(520, window.innerWidth - 40)));
+    const fit = () => setSize(Math.max(260, Math.min(520, window.innerWidth - (showBar ? 70 : 40))));
     fit();
     window.addEventListener("resize", fit);
     return () => window.removeEventListener("resize", fit);
@@ -42,6 +45,8 @@ export default function Board({ fen, orientation = "white", arrows = [], onMove,
 
   return (
     <div className="board">
+      <div className="board-row">
+      {showBar && <EvalBar evaluation={evaluation} orientation={orientation} height={size} />}
       <Chessboard
         position={position}
         onPieceDrop={onDrop}
@@ -54,6 +59,7 @@ export default function Board({ fen, orientation = "white", arrows = [], onMove,
         customBoardStyle={{ borderRadius: "3px", boxShadow: "0 2px 12px rgba(0,0,0,.45)" }}
         animationDuration={150}
       />
+      </div>
       {explore && position !== fen && (
         <button className="link" onClick={() => { setPosition(fen); onMove && onMove({ reset: true, fen }); }}>
           ↺ back to the position

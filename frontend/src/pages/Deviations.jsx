@@ -9,6 +9,7 @@ const BADGE = { repertoire: "repertoire move", master: "master choice", engine: 
 // detail view with board, played vs repertoire vs recommended, games, explanation
 // with citations, and live Stockfish analysis. Second tab: uncovered opponent lines.
 export default function Deviations({ repertoires }) {
+  const [evaluation, setEvaluation] = useState(null); // live engine score for the board's bar
   const [repId, setRepId] = useState(repertoires[0]?.id);
   const [tab, setTab] = useState("deviations");
   const [sort, setSort] = useState("games");
@@ -71,6 +72,7 @@ export default function Deviations({ repertoires }) {
             {detail && !detail.loading && (
               <div className="detail">
                 <Board
+                  evaluation={evaluation}
                   fen={detail.fen}
                   orientation={detail.color}
                   arrows={[arrow(detail.played_move, "rgb(220,60,60)"), arrow(detail.recommended_move, "rgb(40,160,80)")].filter(Boolean)}
@@ -91,7 +93,7 @@ export default function Deviations({ repertoires }) {
                   <ul className="cites">{detail.citations.map((c) => <li key={c.id}>[{c.id}] {c.title} — {c.source}</li>)}</ul>
                 )}
                 <p>Games: {detail.game_links.map((g, i) => <a key={g} href={g} target="_blank" rel="noreferrer">#{i + 1} </a>)}</p>
-                <EnginePanel fen={exploreFen || detail.fen} playerColor={detail.color} />
+                <EnginePanel onInfo={setEvaluation} fen={exploreFen || detail.fen} playerColor={detail.color} />
               </div>
             )}
           </div>

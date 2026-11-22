@@ -10,6 +10,7 @@ import EnginePanel from "../components/EnginePanel.jsx";
 //   right  : repertoire info, notes for the position, live Stockfish
 // Library repertoires open read-only, with "Add to my repertoires".
 export default function Workspace({ repId, user, onBack, onOpen }) {
+  const [evaluation, setEvaluation] = useState(null); // live engine score for the board's bar
   const [tree, setTree] = useState(null);
   const [path, setPath] = useState([]); // [{uci, san}]
   const [flipped, setFlipped] = useState(false);
@@ -171,7 +172,7 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
 
         {/* ---------- centre: board ---------- */}
         <div className="ws-center">
-          <Board fen={fen} orientation={orientation} explore={false} highlight={last?.uci}
+          <Board evaluation={evaluation} fen={fen} orientation={orientation} explore={false} highlight={last?.uci}
             arrows={stored.filter((m) => m.kind !== "opp").map((m) => arrow(m.uci, m.kind === "main" ? "rgba(54,146,231,.85)" : "rgba(54,146,231,.45)"))}
             onMove={(m) => !m.reset && play(m.uci, m.san)} />
           <div className="pathline">
@@ -202,7 +203,7 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
           <textarea rows={4} placeholder={editable ? "Notes for this position (plans, traps, reminders)…" : "No notes for this position."}
             value={note} onChange={(e) => setNote(e.target.value)} onBlur={saveNote} readOnly={!editable || !node} />
           {editable && node && note !== (node.comment || "") && <p className="muted small">Notes save when you click away.</p>}
-          <EnginePanel fen={fen} playerColor={tree.color} hideMasters />
+          <EnginePanel onInfo={setEvaluation} fen={fen} playerColor={tree.color} hideMasters />
         </aside>
       </div>
     </section>

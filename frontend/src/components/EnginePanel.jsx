@@ -8,7 +8,7 @@ import { browserEngineSupported, createBrowserEngine } from "../engine/browserEn
 // The engine runs in the visitor's browser (Stockfish WebAssembly) so the free server
 // only does batch analysis. If WebAssembly is unavailable it falls back to the
 // server's WebSocket stream. A new FEN cancels the previous search either way.
-export default function EnginePanel({ fen, playerColor = "white", hideMasters = false }) {
+export default function EnginePanel({ fen, playerColor = "white", hideMasters = false, onInfo }) {
   const [info, setInfo] = useState(null);
   const [masters, setMasters] = useState(null);
   const [error, setError] = useState(null);
@@ -24,7 +24,7 @@ export default function EnginePanel({ fen, playerColor = "white", hideMasters = 
       try {
         const eng = createBrowserEngine({ multipv: 3, maxDepth: 22 });
         engineRef.current = eng;
-        eng.analyse(fenRef.current, (u) => { setInfo(u); setError(null); });
+        eng.analyse(fenRef.current, (u) => { setInfo(u); setError(null); onInfo && onInfo(u); });
         return () => { closedByUs = true; eng.terminate(); };
       } catch {
         setWhere("server");
@@ -38,6 +38,7 @@ export default function EnginePanel({ fen, playerColor = "white", hideMasters = 
       const msg = JSON.parse(ev.data);
       if (msg.type === "info" && msg.fen === fenRef.current) {
         setInfo(msg);
+        onInfo && onInfo(msg);
         setError(null);
       }
       if (msg.type === "error") setError(msg.message);
@@ -55,9 +56,10 @@ export default function EnginePanel({ fen, playerColor = "white", hideMasters = 
   useEffect(() => {
     fenRef.current = fen;
     setInfo(null);
+    onInfo && onInfo(null);
     setError(null);
     if (where === "browser" && engineRef.current) {
-      engineRef.current.analyse(fen, (u) => { if (fenRef.current === fen) setInfo(u); });
+      engineRef.current.analyse(fen, (u) => { if (fenRef.current === fen) { setInfo(u); onInfo && onInfo(u); } });
     } else {
       const ws = wsRef.current;
       if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ fen }));
@@ -81,9 +83,11 @@ export default function EnginePanel({ fen, playerColor = "white", hideMasters = 
 
   return (
     <div className="engine">
-      <div className="evalbar" title="Evaluation (White's view)">
-        <div className="evalbar-white" style={{ height: `${whiteShare}%` }} />
-      </div>
+      {!onInfo && (
+        <div className="evalbar" title="Evaluation (White's view)">
+          <div className="evalbar-white" style={{ height: `${whiteShare}%` }} />
+        </div>
+      )}
       <div className="engine-body">
         <div className="engine-head">
           <strong>Stockfish</strong>
