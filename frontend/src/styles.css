@@ -7,8 +7,10 @@
   --line: #3d3a37;
   --text: #bababa;
   --text-strong: #e8e6e3;
-  --muted: #8a8784;
+  --muted: #a8a5a1;          /* 6.3:1 on panels (WCAG AA) */
   --primary: #3692e7;      /* Lichess blue */
+  --primary-btn: #1a6fc4;    /* buttons: white text at 5.1:1 */
+  --primary-btn-hover: #155a9f;
   --primary-dim: rgba(54, 146, 231, 0.16);
   --good: #629924;         /* Lichess green */
   --good-dim: rgba(98, 153, 36, 0.18);
@@ -26,7 +28,7 @@
 /* Light variant: opt-in with the toggle in the top bar (dark is the default, like Lichess). */
 :root[data-theme="light"] {
   --bg: #edebe9; --bg-2: #ffffff; --bg-3: #f2f1ef; --bg-hover: #e6e4e1; --line: #d9d7d4;
-  --text: #4d4d4d; --text-strong: #1f1f1f; --muted: #787573;
+  --text: #4d4d4d; --text-strong: #1f1f1f; --muted: #6b6865; --primary: #155a9f;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.12); color-scheme: light;
 }
 * { box-sizing: border-box; }
@@ -46,8 +48,8 @@ button { font: inherit; cursor: pointer; border-radius: var(--radius); border: 1
   background: var(--bg-3); color: var(--text-strong); padding: 7px 13px; transition: background .12s, border-color .12s; }
 button:hover:not(:disabled) { background: var(--bg-hover); }
 button:disabled { opacity: .5; cursor: default; }
-button.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
-button.primary:hover:not(:disabled) { background: #2a7fd0; }
+button.primary { background: var(--primary-btn); border-color: var(--primary-btn); color: #fff; }
+button.primary:hover:not(:disabled) { background: var(--primary-btn-hover); }
 button.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
 button.ghost { background: transparent; }
 button.link { background: none; border: none; padding: 0 3px; color: var(--primary); }
@@ -67,7 +69,7 @@ input.full { width: 100%; margin: 8px 0 0; }
 .form label.check { flex-direction: row; align-items: center; gap: 6px; }
 .segmented { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .segmented button { border: none; border-radius: 0; background: transparent; color: var(--muted); }
-.segmented button.on { background: var(--primary); color: #fff; }
+.segmented button.on { background: var(--primary-btn); color: #fff; }
 .alert { background: var(--bad-dim); color: #ff8a80; border: 1px solid var(--bad); border-radius: var(--radius); padding: 8px 10px; margin: 8px 0; }
 .hint { color: var(--warn); font-size: .9rem; margin: 6px 0; }
 .tag { display: inline-block; font-size: .72rem; padding: 1px 7px; border-radius: 10px; background: var(--bg-hover);
@@ -107,7 +109,7 @@ main { flex: 1; width: 100%; max-width: 1400px; margin: 0 auto; padding: 18px 16
 .card.ok { border-color: var(--good); } .card.ko { border-color: var(--bad); }
 .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin-top: 12px; }
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
-.toolbar button.active, nav button.active { background: var(--primary); color: #fff; }
+.toolbar button.active { background: var(--primary-btn); color: #fff; }
 
 @media (max-width: 980px) {
   .hamburger { display: inline-block; }
@@ -212,7 +214,7 @@ table.list tbody tr:hover, table.list tr.selected, .leaklist li.selected { backg
 .full-seg { display: flex; margin: 8px 0; }
 .full-seg button { flex: 1; padding: 7px 4px; font-size: .85rem; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 8px; }
-.chip.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+.chip.on { background: var(--primary-btn); border-color: var(--primary-btn); color: #fff; }
 button.chip { cursor: pointer; text-transform: capitalize; }
 table.movestats { width: 100%; border-collapse: collapse; font-size: .88rem; }
 table.movestats tr { cursor: pointer; }
@@ -242,3 +244,38 @@ table.movestats td.bar-cell { width: 45%; }
 .res.loss { background: var(--good-dim); color: #9bd35a; }
 .res.draw { background: var(--bg-hover); }
 .reason-tag { display: inline-block; font-size: .72rem; border: 1px solid; border-radius: 10px; padding: 0 7px; margin: 0 4px 2px 0; color: var(--text); }
+
+/* ---------- accessibility (UX audit) ---------- */
+::placeholder { color: var(--muted); opacity: 1; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/* Touch targets: at least 44 px tall on phones and tablets, and always on the sign-in form. */
+.auth-card input, .auth-card button { min-height: 44px; }
+@media (max-width: 900px) {
+  input, select, button:not(.icon):not(.link):not(.brand-btn) { min-height: 44px; }
+  .chip, .reason-tag { min-height: 0; }
+}
+
+/* ---------- compact sign-in: the form is above the fold on every screen ---------- */
+.auth-wrap { min-height: 100vh; grid-template-columns: 1fr 380px; gap: 48px; padding: 24px 16px; }
+.auth-hero h1 { font-size: 2.3rem; margin: 18px 0 8px; }
+.auth-hero p { font-size: 1.05rem; margin: 0; color: var(--text); }
+.auth-card { gap: 8px; }
+.auth-card label { color: var(--text); font-size: .9rem; margin-top: 4px; }
+.auth-card .segmented { margin-bottom: 6px; }
+.auth-card button.wide { margin-top: 8px; }
+@media (max-width: 860px) {
+  .auth-wrap { grid-template-columns: 1fr; align-content: start; gap: 16px; padding-top: 20px; }
+  .auth-hero { text-align: left; }
+  .auth-hero h1 { font-size: 1.5rem; margin: 10px 0 2px; }
+  .auth-hero p { font-size: .95rem; }
+}
+
+/* ---------- evaluation bar beside the board ---------- */
+.board-row { display: flex; gap: 6px; align-items: stretch; }
+.board-evalbar { position: relative; width: 18px; flex: none; background: #403e3c; border-radius: 3px; overflow: hidden;
+  display: flex; flex-direction: column-reverse; box-shadow: 0 2px 12px rgba(0,0,0,.45); }
+.board-evalbar.flipped { flex-direction: column; }
+.board-evalbar-white { background: #e8e6e3; transition: height .35s ease; width: 100%; }
+.board-evalbar-label { position: absolute; left: 0; right: 0; text-align: center; font-size: .62rem; font-weight: 700; }
+.board-evalbar-label.bottom { bottom: 3px; } .board-evalbar-label.top { top: 3px; }
+.board-evalbar-label.on-white { color: #262421; } .board-evalbar-label.on-black { color: #e8e6e3; }
