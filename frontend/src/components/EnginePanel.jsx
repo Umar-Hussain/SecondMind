@@ -90,7 +90,7 @@ export default function EnginePanel({ fen, playerColor = "white", hideMasters = 
             aria-label="Show engine lines"><span /></button>
           <span className="ceval-score">{info ? fmt(info.cp_white, info.mate).replace(/(\.\d)\d$/, "$1") : "…"}</span>
           <span className="ceval-info">
-            <span>Stockfish {where === "browser" ? "(your browser)" : "(server)"}</span>
+            <span>Stockfish</span>
             <span className="muted">{info ? `depth ${info.depth}` : "thinking…"}</span>
           </span>
         </div>
@@ -119,8 +119,6 @@ export default function EnginePanel({ fen, playerColor = "white", hideMasters = 
         <div className="engine-head">
           <strong>Stockfish</strong>
           {info ? <span> depth {info.depth} · {fmt(info.cp_white, info.mate)} (White)</span> : <span> thinking…</span>}
-          <span className="badge engine-badge">engine-verified</span>
-          <span className="muted"> · runs in your {where === "browser" ? "browser" : "server"}</span>
         </div>
         {error && <div className="error">{error}</div>}
         {info && (
