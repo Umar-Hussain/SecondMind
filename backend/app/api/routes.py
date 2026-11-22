@@ -42,7 +42,7 @@ from app.tools.recommend import recommend_move
 from app.tools.search import search as search_repertoires
 from app.tools.repertoire import (
     copy_repertoire, delete_repertoire, edit_node, import_lichess_study, import_moves_text, import_pgn,
-    load_tree, remove_move, save_tree, tree_to_json,
+    load_tree, preview, remove_move, save_tree, tree_to_json,
 )
 
 router = APIRouter()
@@ -69,8 +69,15 @@ def _writable_rep(session: Session, rep_id: int, user: User) -> Repertoire:
     return rep
 
 
-def _rep_summary(r: Repertoire, owner: str | None = None) -> dict:
-    return {"id": r.id, "name": r.name, "color": r.color, "status": r.status, "source": r.source_type,
+def _rep_summary(r: Repertoire, owner: str | None = None, session: Session | None = None) -> dict:
+    """Card data for a repertoire; with a session it also includes the board preview and lines."""
+    extra = {}
+    if session is not None:
+        try:
+            extra = {"preview": preview(load_tree(session, r.id))}
+        except Exception:  # a broken tree must never hide the whole list
+            extra = {"preview": None}
+    return {**extra,"id": r.id, "name": r.name, "color": r.color, "status": r.status, "source": r.source_type,
             "intentional_gambit": r.intentional_gambit, "is_library": r.is_library,
             "description": r.description or "", "copied_from_id": r.copied_from_id, "owner": owner,
             "created_at": r.created_at.isoformat() if r.created_at else None}
@@ -226,13 +233,15 @@ def list_repertoires(q: str = "", user: User = Depends(current_user), session: S
                      ) -> list[dict]:
     reps = session.scalars(select(Repertoire).where(Repertoire.user_id == user.id,
                                                     Repertoire.is_library.is_(False))).all()
-    return [{**_rep_summary(r), "match": why} for r, why in search_repertoires(session, list(reps), q)]
+    return [{**_rep_summary(r, session=session), "match": why}
+            for r, why in search_repertoires(session, list(reps), q)]
 
 
 @router.get("/repertoires/{rep_id}/tree")
 def repertoire_tree(rep_id: int, user: User = Depends(current_user), session: Session = Depends(get_session)) -> dict:
     rep = _readable_rep(session, rep_id, user)
-    return {**tree_to_json(load_tree(session, rep_id)), **_rep_summary(rep)}
+    tree = load_tree(session, rep_id)
+    return {**tree_to_json(tree), **_rep_summary(rep), "preview": preview(tree, max_lines=24)}
 
 
 class NodeEdit(BaseModel):
@@ -311,7 +320,7 @@ def library(q: str = "", user: User = Depends(current_user), session: Session = 
     owners = {u.id: u.display_name or u.username
               for u in session.scalars(select(User).where(User.id.in_(owner_ids)))} if owner_ids else {}
     mine = {r.copied_from_id for r in session.scalars(select(Repertoire).where(Repertoire.user_id == user.id))}
-    return [{**_rep_summary(r, owners.get(r.user_id)), "in_my_repertoires": r.id in mine, "match": why}
+    return [{**_rep_summary(r, owners.get(r.user_id), session), "in_my_repertoires": r.id in mine, "match": why}
             for r, why in search_repertoires(session, list(reps), q)]
 
 

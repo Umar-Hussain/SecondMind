@@ -473,3 +473,86 @@ def delete_repertoire(session: Session, repertoire_id: int) -> None:
         session.execute(delete(model).where(model.repertoire_id == repertoire_id))
     session.execute(delete(Repertoire).where(Repertoire.id == repertoire_id))
     session.commit()
+
+
+# --- Card preview (library grid and "study" list) -------------------------------------------
+
+
+def _san_line(moves: list[str]) -> list[str]:
+    """UCI moves from the start position -> numbered SAN tokens ("1.e4", "c5", "2.Nf3" ...)."""
+    board, out = chess.Board(), []
+    for i, uci in enumerate(moves):
+        move = chess.Move.from_uci(uci)
+        san = board.san(move)
+        out.append(f"{i // 2 + 1}.{san}" if i % 2 == 0 else san)
+        board.push(move)
+    return out
+
+
+def preview(tree: RepTree, max_lines: int = 4, max_plies: int = 40) -> dict:
+    """A small summary for repertoire cards, in the style of Lichess opening and study lists.
+
+    * ``fen`` / ``key_move``: the position after the main line's opening moves and the
+      repertoire side's first move, for a mini board like Lichess's openings page;
+    * ``chapters``: up to ``max_lines`` lines of the tree, each labelled with its opening
+      name and the move where it leaves the main line ("Caro-Kann Defense · 3...c5").
+    """
+    from app.tools.openings import classify  # local import: openings loads its tables lazily
+
+    paths: list[list[str]] = []
+
+    def walk(board: chess.Board, moves: list[str]) -> None:
+        if len(paths) >= max_lines:
+            return
+        node = tree.nodes.get(fen_key(board))
+        options = [] if node is None else [m for m in [node.user_move, *node.alternatives, *node.opponent_moves] if m]
+        legal = []
+        for uci in dict.fromkeys(options):
+            try:
+                move = chess.Move.from_uci(uci)
+            except ValueError:
+                continue
+            if move in board.legal_moves:
+                legal.append(move)
+        if not legal or len(moves) >= max_plies:
+            if moves:
+                paths.append(moves)
+            return
+        for move in legal:
+            board.push(move)
+            walk(board, moves + [move.uci()])
+            board.pop()
+            if len(paths) >= max_lines:
+                return
+
+    walk(chess.Board(), [])
+    if not paths:
+        return {"fen": chess.STARTING_FEN, "key_move": "", "main_line": "", "chapters": [], "opening": ""}
+
+    main = paths[0]
+    info = classify(main)
+    show = max(1, min(info.ply_last_known or 2, 10, len(main)))
+    board = chess.Board()
+    for uci in main[:show]:
+        board.push_uci(uci)
+    first_own = 0 if tree.color == "white" else 1
+    key_move = ""
+    if len(main) > first_own:
+        b = chess.Board()
+        for uci in main[:first_own]:
+            b.push_uci(uci)
+        key_move = b.san(chess.Move.from_uci(main[first_own]))
+
+    chapters = []
+    for path in paths:
+        split = next((i for i, (a, b) in enumerate(zip(path, main)) if a != b), None)
+        name = classify(path).name
+        if split is None:
+            label = name
+        else:
+            san = _san_line(path[: split + 1])[-1]
+            label = f"{split // 2 + 1}{'.' if split % 2 == 0 else '...'}{san.split('.')[-1]} · {name}"
+        start = 0 if split is None else split + 1  # where the line becomes its own chapter
+        chapters.append({"label": label, "moves": " ".join(_san_line(path[:12])), "uci": path, "start": start})
+    return {"fen": board.fen(), "key_move": key_move, "main_line": " ".join(_san_line(main[:10])),
+            "chapters": chapters, "opening": info.name, "positions": len(tree.nodes)}
