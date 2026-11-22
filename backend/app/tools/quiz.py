@@ -79,8 +79,11 @@ def build_quiz(fen: str, color: str, gambit_id: str | None = None, depth: int | 
         raise QuizRejected(f"{len(accepted)} moves are equally good: too ambiguous")
 
     who = "White" if board.turn == chess.WHITE else "Black"
-    if gdef:
+    if gdef and gdef.side == color:
         question = f"{gdef.name}: you play the gambit as {who}. What is the best move that keeps the gambit going?"
+    elif gdef:
+        # The user is the defender: ask for the best reply, not for "keeping the gambit going".
+        question = f"{gdef.name}: your opponent has played the gambit. {who} to move: what is the best reply?"
     else:
         question = f"{opening + ': ' if opening else ''}{who} to move. What is the best move here?"
     return QuizDraft(fen=fen, question=question, correct=rec.chosen_uci, accepted=accepted, eval_cp=correct_cp,
@@ -101,13 +104,20 @@ def save_quiz(session: Session, draft: QuizDraft, leak_id: int | None = None) ->
     return row
 
 
-def quizzes_from_leaks(session: Session, user_id: int, depth: int | None = None, limit: int = 10
-                       ) -> tuple[list[Quiz], list[str]]:
-    """One quiz per open leak (gambit notes excluded). Returns (quizzes, rejection reasons)."""
+def quizzes_from_leaks(session: Session, user_id: int, depth: int | None = None, limit: int = 10,
+                       progress=None) -> tuple[list[Quiz], list[str]]:
+    """One quiz per open leak (gambit notes excluded), costliest leaks first, until ``limit``
+    quizzes exist. A rejected leak (ambiguous position) no longer uses up a slot: the next
+    leak is tried instead. Returns (quizzes, rejection reasons)."""
     leaks = session.scalars(select(Leak).where(Leak.user_id == user_id, Leak.status == "open",
                                                Leak.kind != "gambit_note")).all()
+    leaks = sorted(leaks, key=lambda lk: -(lk.frequency or 1) * max(lk.eval_loss_cp or 0, 1))
     made, rejected = [], []
-    for lk in leaks[:limit]:
+    for i, lk in enumerate(leaks, start=1):
+        if len(made) >= limit:
+            break
+        if progress:
+            progress("training", min(len(made) + 1, limit), limit)
         try:
             draft = build_quiz(lk.fen_before, lk.color, lk.gambit_id, depth=depth, opening=lk.opening_name or "")
         except QuizRejected as exc:
@@ -115,6 +125,18 @@ def quizzes_from_leaks(session: Session, user_id: int, depth: int | None = None,
             continue
         made.append(save_quiz(session, draft, lk.id))
     return made, rejected
+
+
+def display_question(q: Quiz) -> str:
+    """The stored question, corrected for quizzes saved before defender questions existed:
+    the side to move is the user, so if that is not the gambit's side they are defending."""
+    gdef = gambits.get(q.gambit_id) if q.gambit_id else None
+    if gdef and "keeps the gambit going" in (q.question or ""):
+        to_move = "white" if chess.Board(q.fen).turn == chess.WHITE else "black"
+        if gdef.side != to_move:
+            who = to_move.capitalize()
+            return f"{gdef.name}: your opponent has played the gambit. {who} to move: what is the best reply?"
+    return q.question
 
 
 def check_answer(quiz: Quiz, move_uci: str) -> bool:

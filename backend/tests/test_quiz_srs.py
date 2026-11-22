@@ -82,3 +82,16 @@ def test_due_queue_and_grading(db) -> None:
     assert review.interval_days == 1
     assert get_due(db, user.id, now=now) == []
     assert get_due(db, user.id, now=now + timedelta(days=2))
+
+
+def test_gambit_quiz_for_the_defender_asks_for_a_reply(require_engine) -> None:
+    # 1.d4 e5 (Englund Gambit, Black's gambit) 2.dxe5 Nc6 3.Nf3 Qe7: White is the defender.
+    import chess
+    b = chess.Board()
+    for san in ["d4", "e5", "dxe5", "Nc6", "Nf3", "Qe7"]:
+        b.push_san(san)
+    try:
+        q = build_quiz(b.fen(), "white", "englund_gambit", depth=10)
+    except QuizRejected:
+        pytest.skip("position judged ambiguous at this depth")
+    assert "your opponent has played the gambit" in q.question and "keeps the gambit going" not in q.question

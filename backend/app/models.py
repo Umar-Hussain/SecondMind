@@ -213,6 +213,17 @@ class OpponentProfile(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
 
+class SavedReport(Base):
+    """The user's latest gap report, built in the background after each analysis."""
+
+    __tablename__ = "saved_reports"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
+    content_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
 class Briefing(Base):
     __tablename__ = "briefings"
 

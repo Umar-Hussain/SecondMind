@@ -21,8 +21,10 @@ no-LLM evaluation condition) can swap in a deterministic fake.
 
 from __future__ import annotations
 
+import contextvars
 import json
 import time
+from contextlib import contextmanager
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Protocol, TypeVar
@@ -165,9 +167,14 @@ class OpenAICompatBackend:
         import httpx
 
         delay = 2.0
+        deadline = _deadline.get()
         for attempt in range(self.max_retries + 1):
+            left = deadline - time.monotonic() if deadline else None
+            if left is not None and left <= 1:
+                raise LLMError("time budget used up")
             try:
-                resp = self._http.post(f"{self.base_url}/chat/completions", json=payload)
+                resp = self._http.post(f"{self.base_url}/chat/completions", json=payload,
+                                       **({"timeout": left} if left is not None else {}))
             except httpx.HTTPError as exc:
                 if attempt == self.max_retries:
                     raise LLMError(f"network error: {exc}") from exc
@@ -177,8 +184,11 @@ class OpenAICompatBackend:
             if resp.status_code == 429 or resp.status_code >= 500:
                 if attempt == self.max_retries:
                     raise LLMError(f"provider returned {resp.status_code} after {attempt + 1} attempts")
-                wait = float(resp.headers.get("retry-after", 0) or 0)
-                time.sleep(min(max(wait, delay), 30.0))
+                wait = min(max(float(resp.headers.get("retry-after", 0) or 0), delay), 30.0)
+                if deadline and time.monotonic() + wait > deadline:
+                    # Inside a time budget (interactive pages): give up now, the caller falls back.
+                    raise LLMError(f"provider returned {resp.status_code}; not waiting {wait:.0f}s")
+                time.sleep(wait)
                 delay *= 2
                 continue
             if resp.status_code >= 400:
@@ -293,6 +303,21 @@ def _strip_fences(text: str) -> str:
         t = t.split("\n", 1)[1] if "\n" in t else t[3:]
         t = t.rsplit("```", 1)[0]
     return t.strip()
+
+
+_deadline: contextvars.ContextVar[float | None] = contextvars.ContextVar("llm_deadline", default=None)
+
+
+@contextmanager
+def time_budget(seconds: float):
+    """Limit every LLM call inside the block to ``seconds`` in total, retries and rate-limit
+    waits included. Free tiers can ask for 30-90 s waits; a page should rather fall back to
+    the verified template than make the user wait."""
+    token = _deadline.set(time.monotonic() + seconds)
+    try:
+        yield
+    finally:
+        _deadline.reset(token)
 
 
 def generate_structured(prompt: str, schema: type[T], system: str = "", name: str = "structured",

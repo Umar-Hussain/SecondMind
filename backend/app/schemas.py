@@ -183,11 +183,13 @@ class GapReportItem(BaseModel):
     citations: list[Citation] = Field(default_factory=list)
     verified: bool = False
     is_gambit_note: bool = False
+    generated_by: Literal["llm", "template"] = "template"  # who wrote this item's explanation
 
 
 class GapReport(BaseModel):
     leaks: list[GapReportItem]
     generated_by: Literal["llm", "template"] = "template"
+    built_at: str | None = None
 
 
 class RepertoireDeviationOut(BaseModel):

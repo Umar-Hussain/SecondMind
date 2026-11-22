@@ -17,6 +17,9 @@ Only ``full`` (or ``template``) output is ever shown to users.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import datetime, timezone
+
 from dataclasses import dataclass
 
 import chess
@@ -140,10 +143,14 @@ def explain(f: LeakFacts, mode: str = "full", rating: int | None = None) -> tupl
         raise
 
 
-def build_item(lk: LeakOut, mode: str = "full", depth: int | None = None, rating: int | None = None
-               ) -> GapReportItem:
+def build_item(lk: LeakOut, mode: str = "full", depth: int | None = None, rating: int | None = None,
+               budget_s: float | None = None) -> GapReportItem:
     f = gather_facts(lk, depth=depth, use_rag=mode != "llm")
-    out, by = explain(f, mode, rating)
+    if budget_s is not None:
+        with client.time_budget(budget_s):
+            out, by = explain(f, mode, rating)
+    else:
+        out, by = explain(f, mode, rating)
     cites = {d.id: d.citation for d in f.docs}
     return GapReportItem(
         opening=lk.opening_name, color=lk.color, kind=lk.kind, position_fen=lk.fen, played=lk.played,  # type: ignore[arg-type]
@@ -152,17 +159,31 @@ def build_item(lk: LeakOut, mode: str = "full", depth: int | None = None, rating
         frequency=lk.frequency, explanation=out.explanation, plan=out.plan, memory_aid=out.memory_aid,
         master_games=f.master_games, citations=[cites[c] for c in out.citations if c in cites],
         verified=f.rec_verified and (mode in ("full", "template") or by == "template"),
-        is_gambit_note=lk.kind == "gambit_note",
+        is_gambit_note=lk.kind == "gambit_note", generated_by=by,  # type: ignore[arg-type]
     )
 
 
 def build_gap_report(leaks: list[LeakOut], mode: str = "full", depth: int | None = None, rating: int | None = None,
-                     top: int = 10) -> GapReport:
+                     top: int = 10, budget_s: float | None = None,
+                     progress: Callable[[str, int, int], None] | None = None) -> GapReport:
+    """Build the report. With ``budget_s`` each explanation gets at most that long from the LLM;
+    after the first item that falls back (rate limit, quota, guard) the rest use the verified
+    template straight away instead of waiting again (a simple circuit breaker)."""
     real = [lk for lk in leaks if lk.kind != "gambit_note"][:top]
     notes = [lk for lk in leaks if lk.kind == "gambit_note"]
-    items = [build_item(lk, mode, depth, rating) for lk in real + notes]
-    by_llm = mode != "template" and client.is_available()
-    return GapReport(leaks=items, generated_by="llm" if by_llm else "template")
+    todo = real + notes
+    items: list[GapReportItem] = []
+    item_mode = mode
+    for i, lk in enumerate(todo, start=1):
+        if progress:
+            progress("report", i, len(todo))
+        item = build_item(lk, item_mode, depth, rating, budget_s)
+        if budget_s is not None and item_mode == "full" and item.generated_by == "template" and client.is_available():
+            item_mode = "template"  # the provider is struggling: stop asking for this report
+        items.append(item)
+    by_llm = any(it.generated_by == "llm" for it in items)
+    return GapReport(leaks=items, generated_by="llm" if by_llm else "template",
+                     built_at=datetime.now(timezone.utc).isoformat())
 
 
 # ---------------------------------------------------------------------------

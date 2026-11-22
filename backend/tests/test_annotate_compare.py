@@ -74,6 +74,8 @@ def test_background_job_reports_progress(monkeypatch) -> None:
         return AnalysisSummary(user_id=user_id, games_fetched=3)
 
     monkeypatch.setattr(analysis_jobs.pipeline, "run_analysis", fake_run)
+    monkeypatch.setattr(analysis_jobs, "build_and_save_report", lambda s, u, p=None: (p("report", 1, 1), {"leaks": [1, 2]})[1])
+    monkeypatch.setattr(analysis_jobs, "make_quizzes", lambda s, u, p=None: 4)
     first = analysis_jobs.start(987654)
     assert first["state"] == "running"
     for _ in range(50):
@@ -82,3 +84,4 @@ def test_background_job_reports_progress(monkeypatch) -> None:
             break
         time.sleep(0.02)
     assert st["state"] == "done" and st["percent"] == 100 and st["summary"]["games_fetched"] == 3
+    assert st["summary"]["report_items"] == 2 and st["summary"]["quizzes"] == 4

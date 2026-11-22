@@ -113,8 +113,13 @@ def recommend_move(
             source = "master"
             games = next((m.games for m in master_list if m.uci == uci), 0)
             share = games / stats.total_games if stats.total_games else 0
-            pop_txt = (f"played in {share:.0%} of {stats.total_games} master games ({stats.source})"
-                       if games else f"main-line {gdef.name if gdef else ''} theory")
+            if not games:
+                pop_txt = f"main-line {gdef.name if gdef else ''} theory"
+            elif stats.source == "eco-book":
+                # ECO-book counts are synthetic (see masters.py): never present them as games.
+                pop_txt = "the main book move here" if share >= 0.5 else "a standard book move here"
+            else:
+                pop_txt = f"played in {share:.0%} of {stats.total_games} master games"
             reason = f"{san}: {pop_txt}, {best_cp - cp} cp from the best" + (
                 " gambit-keeping move" if gambit_mode else " engine move")
             break

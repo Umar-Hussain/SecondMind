@@ -27,7 +27,8 @@ from app.auth import (
 from app.config import get_settings
 from app.db import get_session
 from app.llm import agent
-from app.models import Briefing as BriefingRow, Game, Leak, Quiz, Repertoire, RepertoireDeviation, Review, \
+from app.llm import client as llm_client
+from app.models import Briefing as BriefingRow, Game, Leak, SavedReport, Quiz, Repertoire, RepertoireDeviation, Review, \
     UncoveredLine, User
 from app.schemas import (
     AnalyzeRequest, LoginRequest, ProfileUpdate, QuizAnswer, RepertoireCreate, ScoutRequest, SignupRequest,
@@ -409,13 +410,29 @@ def get_leaks(user: User = Depends(current_user), session: Session = Depends(get
     return sorted(out, key=lambda x: (x["kind"] == "gambit_note", -x["frequency"] * max(x["eval_loss_cp"], 1)))
 
 
+@router.get("/report/saved")
+def saved_report(user: User = Depends(current_user), session: Session = Depends(get_session)) -> dict:
+    """The report built by the last background analysis (instant), plus how many leaks exist."""
+    row = session.scalars(select(SavedReport).where(SavedReport.user_id == user.id)).first()
+    n_leaks = session.scalar(select(func.count()).select_from(Leak).where(Leak.user_id == user.id)) or 0
+    return {"report": row.content_json if row else None, "leaks": n_leaks}
+
+
+@router.post("/report/rebuild")
+def rebuild_report(user: User = Depends(current_user)) -> dict:
+    """Rebuild the report and quizzes in the background (no new download)."""
+    return analysis_jobs.start(user.id, kind="report")
+
+
 @router.get("/report")
 def get_report(top: int = 8, mode: str = "full", depth: int | None = Query(None, ge=6, le=22),
                user: User = Depends(current_user), session: Session = Depends(get_session)) -> dict:
+    """Build a report synchronously (kept for scripts and the evaluation; the app uses /report/saved)."""
     if mode not in ("full", "template"):
         raise HTTPException(422, "only verified modes (full, template) are served to users")
     leaks = pipeline.stored_leaks(session, user.id)
-    return report.build_gap_report(leaks, mode=mode, depth=depth, rating=user.rating, top=top).model_dump(mode="json")
+    return report.build_gap_report(leaks, mode=mode, depth=depth, rating=user.rating, top=top,
+                                   budget_s=analysis_jobs.LLM_BUDGET_S).model_dump(mode="json")
 
 
 @router.get("/deviations")
@@ -437,8 +454,9 @@ def deviation_detail(dev_id: int, user: User = Depends(current_user), session: S
     fen = board_from_key(dev.node_fen).fen()
     board = chess.Board(fen)
     opening = classify([m.uci() for m in board.move_stack]) if board.move_stack else None
-    expl, docs, by = report.explain_deviation(dev, opening.name if opening else rep.name,
-                                              opening.eco if opening else None, user.rating)
+    with llm_client.time_budget(15):  # the user is waiting: fall back to the verified template quickly
+        expl, docs, by = report.explain_deviation(dev, opening.name if opening else rep.name,
+                                                  opening.eco if opening else None, user.rating)
     stats = masters.master_moves(fen)
     return {**dev.model_dump(mode="json"), "fen": fen, "repertoire_name": rep.name,
             "explanation": expl.explanation, "plan": expl.plan, "memory_aid": expl.memory_aid,
@@ -571,7 +589,26 @@ def get_briefing_ics(briefing_id: int, game_time: datetime, user: User = Depends
 @router.post("/quiz/generate")
 def generate_quizzes(depth: int | None = Query(None, ge=6, le=22), user: User = Depends(current_user),
                      session: Session = Depends(get_session)) -> dict:
-    return {"trail": agent.daily_training(session, user.id, depth=depth).trail}
+    """Create quizzes from the costliest open leaks and schedule them (no LLM involved)."""
+    return {"created": analysis_jobs.make_quizzes(session, user.id)}
+
+
+@router.get("/quiz/summary")
+def quiz_summary(user: User = Depends(current_user), session: Session = Depends(get_session)) -> dict:
+    """Counts for the Train page: due now, total, answered, correct, and open leaks to train."""
+    now = datetime.now(timezone.utc)
+    reviews = session.scalars(select(Review).where(Review.user_id == user.id)).all()
+
+    def due(r):
+        d = r.due_at if r.due_at.tzinfo else r.due_at.replace(tzinfo=timezone.utc)
+        return d <= now
+    graded = [r for r in reviews if r.last_result is not None]
+    open_leaks = session.scalar(select(func.count()).select_from(Leak).where(
+        Leak.user_id == user.id, Leak.status == "open", Leak.kind != "gambit_note")) or 0
+    upcoming = sorted(r.due_at for r in reviews if not due(r))
+    return {"due": sum(1 for r in reviews if due(r)), "total": len(reviews), "answered": len(graded),
+            "correct": sum(1 for r in graded if (r.last_result or 0) >= 3), "open_leaks": open_leaks,
+            "next_due": upcoming[0].isoformat() if upcoming else None}
 
 
 @router.get("/quiz/next")
@@ -580,7 +617,7 @@ def next_quiz(user: User = Depends(current_user), session: Session = Depends(get
     if not due:
         return {"quiz": None}
     q = due[0]
-    return {"quiz": {"id": q.id, "fen": q.fen, "question": q.question, "gambit_id": q.gambit_id}}
+    return {"quiz": {"id": q.id, "fen": q.fen, "question": quiz.display_question(q), "gambit_id": q.gambit_id}}
 
 
 @router.post("/quiz/{quiz_id}/answer")
