@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Chess } from "chess.js";
 import { api, fenKey } from "../api.js";
 import Board, { arrow } from "../components/Board.jsx";
@@ -9,6 +9,12 @@ import EnginePanel from "../components/EnginePanel.jsx";
 //   centre : the board with the evaluation bar
 //   right  : live Stockfish, the move list, moves stored here + master statistics, controls
 // Library repertoires open read-only, with "Add to my repertoires".
+//
+// Two modes:
+//   practice : the app plays the opponent's moves from the repertoire, you answer with yours.
+//              A wrong move is shown, then taken back; hints point at the right piece, then the move.
+//   explore  : free browsing and editing (engine, masters, save / prune moves).
+const PIECE = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
 export default function Workspace({ repId, user, onBack, onOpen }) {
   const [evaluation, setEvaluation] = useState(null); // live engine score for the board's bar
   const [tree, setTree] = useState(null);
@@ -18,9 +24,16 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
   const [note, setNote] = useState("");
   const [msg, setMsg] = useState(null);
   const [error, setError] = useState(null);
+  const [mode, setMode] = useState(null); // "practice" | "explore", chosen once the tree loads
+  const [bad, setBad] = useState(null); // a wrong practice move, shown briefly then taken back
+  const [feedback, setFeedback] = useState(null); // {kind: good | bad | hint | done, text}
+  const [hint, setHint] = useState(0); // 0 none, 1 which piece, 2 show the move
+  const [score, setScore] = useState({ right: 0, wrong: 0 });
+  const seen = useRef(new Set()); // positions already practised, so the opponent varies its replies
 
   const load = useCallback(() => api.get(`/repertoires/${repId}/tree`).then(setTree).catch((e) => setError(e.message)), [repId]);
-  useEffect(() => { setPath([]); load(); }, [load]);
+  useEffect(() => { setPath([]); setMode(null); load(); }, [load]);
+  useEffect(() => { if (tree && mode === null) setMode(tree.nodes.length ? "practice" : "explore"); }, [tree, mode]);
 
   const nodes = useMemo(() => Object.fromEntries((tree?.nodes || []).map((n) => [n.fen_key, n])), [tree]);
   const game = useMemo(() => {
@@ -30,6 +43,13 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
   }, [path]);
   const fen = game.fen();
   const node = nodes[fenKey(fen)];
+  const practice = mode === "practice";
+  const shownFen = useMemo(() => {
+    if (!bad) return fen;
+    const g = new Chess(fen);
+    g.move({ from: bad.uci.slice(0, 2), to: bad.uci.slice(2, 4), promotion: bad.uci[4] });
+    return g.fen();
+  }, [fen, bad]);
   const editable = tree && !tree.is_library ? true : tree?.is_library && user.role === "admin";
   const userTurn = tree && (game.turn() === "w") === (tree.color === "white");
 
@@ -40,10 +60,14 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
     return () => { cancelled = true; };
   }, [fen]);
 
+  const practiceRef = useRef(false);
+  practiceRef.current = practice;
+
   // Keyboard navigation like Lichess: left / right arrows step through the line.
   useEffect(() => {
     const onKey = (e) => {
       if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)) return;
+      if (practiceRef.current) return; // in practice the app drives the opponent's moves
       if (e.key === "ArrowLeft") setPath((p) => p.slice(0, -1));
       if (e.key === "ArrowRight") document.getElementById("sv-next-btn")?.click();
     };
@@ -59,6 +83,73 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
       ]
     : [];
   const storedSet = new Set(stored.map((m) => m.uci));
+
+  // ---------------- practice mode ----------------
+  const myMoves = node ? [node.user_move, ...node.alternatives.map((a) => a.uci)].filter(Boolean) : [];
+  const theirMoves = node ? node.opponent_moves : [];
+  const endText = path.length ? "End of this line. Well played!" : "Nothing to practise yet: this repertoire has no moves here.";
+
+  // On the opponent's turn the app plays one of their stored replies (preferring replies not
+  // practised yet in this visit). On your turn it waits; with nothing stored the line is over.
+  useEffect(() => {
+    if (!practice || !tree || bad) return undefined;
+    seen.current.add(fenKey(fen));
+    if (userTurn) {
+      if (!myMoves.length) setFeedback({ kind: "done", text: endText });
+      return undefined;
+    }
+    if (!theirMoves.length) {
+      setFeedback({ kind: "done", text: endText });
+      return undefined;
+    }
+    const fresh = theirMoves.filter((m) => !seen.current.has(keyAfter(fen, m.uci)));
+    const pool = fresh.length ? fresh : theirMoves;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    const t = setTimeout(() => setPath((p) => [...p, { uci: pick.uci, san: pick.san }]), path.length ? 550 : 350);
+    return () => clearTimeout(t);
+  }, [practice, fen, bad, tree]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => setHint(0), [fen]);
+
+  function practiceMove(m) {
+    if (bad || !userTurn || !myMoves.length) return;
+    if (myMoves.includes(m.uci)) {
+      setScore((x) => ({ ...x, right: x.right + 1 }));
+      setFeedback({ kind: "good", text: m.uci === node.user_move ? `${m.san} is right.` : `${m.san} is right (one of your alternatives).` });
+      setPath([...path, { uci: m.uci, san: m.san }]);
+    } else {
+      setScore((x) => ({ ...x, wrong: x.wrong + 1 }));
+      setFeedback({ kind: "bad", text: `${m.san} is not in your repertoire. Try again.` });
+      setBad({ uci: m.uci, san: m.san });
+      setTimeout(() => setBad(null), 900);
+    }
+  }
+
+  function showHint() {
+    if (!node?.user_move) return;
+    const mv = new Chess(fen).move({ from: node.user_move.slice(0, 2), to: node.user_move.slice(2, 4), promotion: node.user_move[4] });
+    if (hint === 0) {
+      setHint(1);
+      setFeedback({ kind: "hint", text: `Hint: move your ${PIECE[mv.piece]}.` });
+    } else {
+      setHint(2);
+      setFeedback({ kind: "hint", text: `The move is ${node.user_move_san}.` });
+    }
+  }
+
+  function restart() {
+    setPath([]);
+    setBad(null);
+    setHint(0);
+    setFeedback(null);
+    setScore({ right: 0, wrong: 0 });
+  }
+
+  function switchMode(m) {
+    setMode(m);
+    setBad(null);
+    setHint(0);
+    setFeedback(null);
+  }
 
   // The last move of the path is "unsaved" when its parent position does not store it.
   const last = path[path.length - 1];
@@ -148,8 +239,15 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
       out.push({ uci: u, san: mv.san });
     }
     setMsg(null);
+    setFeedback(null);
     setPath(out);
   }
+  const myColor = tree.color === "white" ? "w" : "b";
+  const boardArrows = practice
+    ? (hint === 2 && node?.user_move ? [arrow(node.user_move, "rgba(21,120,27,.8)")] : [])
+    : stored.filter((m) => m.kind !== "opp").map((m) => arrow(m.uci, m.kind === "main" ? "rgba(21,120,27,.8)" : "rgba(21,120,27,.45)"));
+  // Hint level 1 lights up the square of the piece to move.
+  const boardHighlight = bad ? bad.uci : practice && hint === 1 && node?.user_move ? node.user_move.slice(0, 2).repeat(2) : last?.uci;
 
   return (
     <section className="study-view fade-in">
@@ -189,28 +287,56 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
 
       {/* ---------- centre: board ---------- */}
       <div className="sv-board">
-        <Board max={600} evaluation={evaluation} fen={fen} orientation={orientation} explore={false} highlight={last?.uci}
-          arrows={stored.filter((m) => m.kind !== "opp").map((m) => arrow(m.uci, m.kind === "main" ? "rgba(21,120,27,.8)" : "rgba(21,120,27,.45)"))}
-          onMove={(m) => !m.reset && play(m.uci, m.san)} />
-        {!lastSaved && <p className="hint">{last.san} is not in this repertoire yet{editable ? ". Press Save to add it." : "."}</p>}
+        <Board max={600} evaluation={practice ? undefined : evaluation} fen={shownFen} orientation={orientation} explore={false}
+          highlight={boardHighlight} arrows={boardArrows}
+          canDrag={practice ? (p) => userTurn && !bad && p[0] === myColor : undefined}
+          onMove={(m) => !m.reset && (practice ? practiceMove(m) : play(m.uci, m.san))} />
+        {!practice && !lastSaved && <p className="hint">{last.san} is not in this repertoire yet{editable ? ". Press Save to add it." : "."}</p>}
         {msg && <p className="ok small">{msg}</p>}
         {error && <div className="alert">{error}</div>}
       </div>
 
       {/* ---------- right: engine, move list, next moves, controls ---------- */}
       <aside className="sv-tools">
+        <div className="sv-mode" role="tablist" aria-label="Mode">
+          <button role="tab" aria-selected={practice} className={practice ? "on" : ""} onClick={() => switchMode("practice")}>Practice</button>
+          <button role="tab" aria-selected={!practice} className={!practice ? "on" : ""} onClick={() => switchMode("explore")}>Explore &amp; edit</button>
+        </div>
+        {practice ? (
+          <div className="practice">
+            <p className="practice-turn">
+              {feedback?.kind === "done" ? "Line complete" : userTurn ? `Your move (${tree.color})` : "Opponent is moving…"}
+            </p>
+            {feedback && <p className={`practice-msg ${feedback.kind}`} role="status">{feedback.text}</p>}
+            {!feedback && <p className="muted small">The opponent's moves are played for you. Play your repertoire move on the board.</p>}
+            {node?.comment && userTurn && feedback?.kind !== "bad" && <p className="practice-note">{node.comment}</p>}
+            <div className="practice-score">
+              <span><b className="good">{score.right}</b> right</span>
+              <span><b className="bad">{score.wrong}</b> mistakes</span>
+            </div>
+            <div className="practice-actions">
+              {feedback?.kind === "done" ? (
+                <button className="primary" onClick={restart}>Practise another line</button>
+              ) : (
+                <button onClick={showHint} disabled={!userTurn || !node?.user_move || hint === 2}>{hint === 0 ? "Hint" : "Show the move"}</button>
+              )}
+              <button className="ghost" onClick={restart}>Restart</button>
+            </div>
+          </div>
+        ) : (
         <EnginePanel onInfo={setEvaluation} fen={fen} playerColor={tree.color} hideMasters compact />
+        )}
         <div className="sv-moves">
           {rows.length === 0 && <p className="muted small pad">Starting position. Pick a line on the left, a move below, or play on the board.</p>}
           {rows.map(([i, w, b]) => (
             <div className="sv-row" key={i}>
               <span className="sv-num">{i / 2 + 1}</span>
-              <button className={`sv-mv ${i === path.length - 1 ? "current" : ""}`} onClick={() => setPath(path.slice(0, i + 1))}>{w.san}</button>
-              {b ? <button className={`sv-mv ${i + 1 === path.length - 1 ? "current" : ""}`} onClick={() => setPath(path.slice(0, i + 2))}>{b.san}</button> : <span />}
+              <button className={`sv-mv ${i === path.length - 1 ? "current" : ""}`} disabled={practice} onClick={() => setPath(path.slice(0, i + 1))}>{w.san}</button>
+              {b ? <button className={`sv-mv ${i + 1 === path.length - 1 ? "current" : ""}`} disabled={practice} onClick={() => setPath(path.slice(0, i + 2))}>{b.san}</button> : <span />}
             </div>
           ))}
         </div>
-        <div className="sv-next">
+        {!practice && <div className="sv-next">
           <div className="sv-box-title"><span>{userTurn ? "Your move here" : "Opponent replies"}</span></div>
           <div className="sv-chips">
             {stored.map((m) => (
@@ -237,14 +363,16 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
             ))}
             {masters && masters.moves.length === 0 && <li className="muted small">No master games.</li>}
           </ul>
-        </div>
+        </div>}
         <div className="sv-controls">
+          {!practice && <>
           <button onClick={() => setPath([])} title="First move" aria-label="First move">⏮</button>
           <button onClick={() => setPath(path.slice(0, -1))} disabled={!path.length} title="Previous move (←)" aria-label="Previous move">❮</button>
           <button id="sv-next-btn" onClick={forward} disabled={!stored.length} title="Next move (→)" aria-label="Next move">❯</button>
+          </>}
           <button onClick={() => setFlipped(!flipped)} title="Flip board" aria-label="Flip board">⇅</button>
-          {editable && <button className="save" onClick={saveMove} disabled={lastSaved} title="Save this move to the repertoire">Save</button>}
-          {editable && last && lastSaved && (
+          {!practice && editable && <button className="save" onClick={saveMove} disabled={lastSaved} title="Save this move to the repertoire">Save</button>}
+          {!practice && editable && last && lastSaved && (
             <button className="prune" title="Remove the last move and everything after it" aria-label="Remove the last move"
               onClick={() => { prune(last.uci, parentFen); setPath(path.slice(0, -1)); }}>✂</button>
           )}
@@ -252,4 +380,11 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
       </aside>
     </section>
   );
+}
+
+// Position key after playing uci from fen (used to vary the opponent's practice replies).
+function keyAfter(fen, uci) {
+  const g = new Chess(fen);
+  g.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] });
+  return fenKey(g.fen());
 }

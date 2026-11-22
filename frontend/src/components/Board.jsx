@@ -9,9 +9,10 @@ const DARK = { backgroundColor: "#b58863" };
 
 // Interactive board. Moves are validated client-side with chess.js; the parent
 // gets the attempted move. In explore mode the board also keeps its own position
-// so the user can try lines without changing the parent state.
+// so the user can try lines without changing the parent state. canDrag(piece) (piece like "wN")
+// limits which pieces may be picked up, used by practice mode.
 export default function Board({ fen, orientation = "white", arrows = [], onMove, explore = true, width, highlight,
-                                evaluation, max = 520 }) {
+                                evaluation, max = 520, canDrag }) {
   const showBar = evaluation !== undefined; // pass null while the engine is still thinking
   const [position, setPosition] = useState(fen);
   const [size, setSize] = useState(width || 440);
@@ -50,6 +51,7 @@ export default function Board({ fen, orientation = "white", arrows = [], onMove,
       <Chessboard
         position={position}
         onPieceDrop={onDrop}
+        isDraggablePiece={canDrag ? ({ piece }) => canDrag(piece) : undefined}
         boardOrientation={orientation}
         boardWidth={size}
         customArrows={arrows}
