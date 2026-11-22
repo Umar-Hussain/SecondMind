@@ -118,13 +118,15 @@ class OpenAICompatBackend:
     """
 
     def __init__(self, base_url: str, model: str, api_key: str = "", http: Any = None,
-                 max_retries: int = 3, timeout: float = 90.0) -> None:
+                 max_retries: int = 3, timeout: float = 90.0, fail_fast: bool = False) -> None:
         import httpx
 
         if not base_url or not model:
             raise LLMUnavailable("LLM_BASE_URL and LLM_MODEL are required for this provider")
         self.base_url, self.model = base_url.rstrip("/"), model
         self.max_retries = max_retries
+        self.fail_fast = fail_fast  # in a chain: on 429 hand over to the next model at once
+        self.retry_after = 0.0  # last rate-limit wait the provider asked for
         headers = {"Content-Type": "application/json"}
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
@@ -182,7 +184,8 @@ class OpenAICompatBackend:
                 delay *= 2
                 continue
             if resp.status_code == 429 or resp.status_code >= 500:
-                if attempt == self.max_retries:
+                self.retry_after = float(resp.headers.get("retry-after", 0) or 0)
+                if self.fail_fast or attempt == self.max_retries:
                     raise LLMError(f"provider returned {resp.status_code} after {attempt + 1} attempts")
                 wait = min(max(float(resp.headers.get("retry-after", 0) or 0), delay), 30.0)
                 if deadline and time.monotonic() + wait > deadline:
@@ -237,6 +240,51 @@ class OpenAICompatBackend:
                                        "temperature": 0.2}))
 
 
+class ChainBackend:
+    """Several free models behind one interface (LLM_FALLBACKS).
+
+    Each call goes to the first model that is not resting. When a model fails with a
+    rate limit, a server error or a network error it rests for the time the provider asked
+    (at least ``cooldown_s``) and the same call moves on to the next model, so a busy
+    free tier never makes the user wait. Only if every model fails does the call fail
+    (and the caller falls back to the verified template).
+    """
+
+    def __init__(self, members: list[tuple[str, Any]], cooldown_s: float = 60.0) -> None:
+        self.members = members  # [(label, backend)]
+        self.cooldown_s = cooldown_s
+        self.resting: dict[str, float] = {}  # label -> monotonic time it may be used again
+        self.last_used: str | None = None
+
+    def _call(self, method: str, *args):
+        errors = []
+        now = time.monotonic()
+        ready = [m for m in self.members if self.resting.get(m[0], 0) <= now]
+        # If everything is resting, try the one that will be ready soonest anyway.
+        order = ready or sorted(self.members, key=lambda m: self.resting.get(m[0], 0))[:1]
+        for label, backend in order:
+            if _deadline.get() and time.monotonic() >= _deadline.get():
+                break
+            try:
+                reply = getattr(backend, method)(*args)
+                self.last_used = label
+                return reply
+            except LLMError as exc:
+                wait = max(self.cooldown_s, getattr(backend, "retry_after", 0) or 0)
+                self.resting[label] = time.monotonic() + wait
+                errors.append(f"{label}: {exc}")
+        raise LLMError("all models busy: " + " | ".join(errors) if errors else "all models are resting")
+
+    def structured(self, system, messages, schema, max_tokens):
+        return self._call("structured", system, messages, schema, max_tokens)
+
+    def text(self, system, messages, max_tokens):
+        return self._call("text", system, messages, max_tokens)
+
+    def tools(self, system, messages, tools, max_tokens):
+        return self._call("tools", system, messages, tools, max_tokens)
+
+
 class FakeBackend:
     """Deterministic backend for tests: returns queued replies in order."""
 
@@ -285,7 +333,15 @@ def get_backend() -> Backend:
             _backend = AnthropicBackend(s.anthropic_api_key, s.anthropic_model)
         else:
             base_url, model, key = s.llm_settings
-            _backend = OpenAICompatBackend(base_url, model, key)
+            extra = s.llm_fallback_list
+            if not extra:
+                _backend = OpenAICompatBackend(base_url, model, key)
+            else:
+                members = [(f"{model}@{base_url.split('//')[-1].split('/')[0]}",
+                            OpenAICompatBackend(base_url, model, key, max_retries=1, fail_fast=True))]
+                members += [(f"{m}@{u.split('//')[-1].split('/')[0]}",
+                             OpenAICompatBackend(u, m, k, max_retries=1, fail_fast=True)) for u, m, k in extra]
+                _backend = ChainBackend(members, cooldown_s=s.llm_cooldown_s)
     return _backend
 
 

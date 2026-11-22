@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     llm_model: str = ""  # empty = the provider's default model
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-opus-5-5"
+    # Extra free models tried in order when the main one is rate limited or down.
+    # Entries separated by ";" (or new lines), each "provider|model|api_key" where provider
+    # is groq, gemini, openrouter, mistral, cerebras or a full https:// base URL. Example:
+    #   gemini|gemini-2.5-flash|KEY1; mistral|mistral-small-latest|KEY2
+    llm_fallbacks: str = ""
+    llm_cooldown_s: int = 60  # how long a rate-limited model rests before it is tried again
 
     # --- Accounts ---------------------------------------------------------------
     secret_key: str = ""  # signs login tokens; empty = random key saved under data/cache
@@ -106,6 +112,20 @@ class Settings(BaseSettings):
         return bool(self.llm_api_key)
 
     @property
+    def llm_fallback_list(self) -> list[tuple[str, str, str]]:
+        """Parsed ``llm_fallbacks``: [(base_url, model, api_key)], bad entries skipped."""
+        out = []
+        for raw in self.llm_fallbacks.replace("\n", ";").split(";"):
+            parts = [p.strip() for p in raw.split("|")]
+            if len(parts) != 3 or not all(parts):
+                continue
+            provider, model, key = parts
+            url = PROVIDER_URLS.get(provider.lower(), provider if provider.startswith("http") else "")
+            if url:
+                out.append((url.rstrip("/"), model, key))
+        return out
+
+    @property
     def llm_settings(self) -> tuple[str, str, str]:
         """(base_url, model, api_key) for OpenAI-compatible providers, with defaults per provider."""
         defaults = {
@@ -115,6 +135,16 @@ class Settings(BaseSettings):
         }
         url, model = defaults.get(self.llm_provider.lower(), ("", ""))
         return (self.llm_base_url or url).rstrip("/"), self.llm_model or model, self.llm_api_key
+
+
+# OpenAI-compatible endpoints of free providers usable in LLM_FALLBACKS.
+PROVIDER_URLS = {
+    "groq": "https://api.groq.com/openai/v1",
+    "gemini": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "openrouter": "https://openrouter.ai/api/v1",
+    "mistral": "https://api.mistral.ai/v1",
+    "cerebras": "https://api.cerebras.ai/v1",
+}
 
 
 @lru_cache
