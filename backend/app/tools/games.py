@@ -10,6 +10,7 @@ Duplicates are removed by:
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -45,22 +46,38 @@ def merge_games(*sources: Iterable[NormalizedGame]) -> list[NormalizedGame]:
     return merged
 
 
-def fetch_user_games(user: User, max_games: int = 200) -> tuple[list[NormalizedGame], list[str]]:
-    """Fetch from every linked platform. Returns (games, warnings)."""
+def fetch_user_games(user: User, max_games: int = 200, since: dict | None = None
+                     ) -> tuple[list[NormalizedGame], list[str]]:
+    """Fetch from every linked platform. Returns (games, warnings).
+
+    ``since`` maps a source ("lichess" / "chesscom") to the newest stored game's time, so a
+    re-fetch only downloads newer games."""
+    since = since or {}
     warnings: list[str] = []
     per_source: list[list[NormalizedGame]] = []
     if user.lichess_username:
         try:
-            per_source.append(lichess.fetch_games(user.lichess_username, max_games=max_games))
+            per_source.append(lichess.fetch_games(user.lichess_username, max_games=max_games,
+                                                  since=_after(since.get("lichess"))))
         except NotFoundError:
             warnings.append(f"Lichess user '{user.lichess_username}' not found")
     if user.chesscom_username:
         try:
-            per_source.append(chesscom.fetch_games(user.chesscom_username, max_games=max_games))
+            per_source.append(chesscom.fetch_games(user.chesscom_username, max_games=max_games,
+                                                   since=_after(since.get("chesscom"))))
         except NotFoundError:
             warnings.append(f"Chess.com user '{user.chesscom_username}' not found")
     merged = merge_games(*per_source)[:max_games]
     return merged, warnings
+
+
+def _after(ts):
+    """A stored timestamp as an aware datetime one second later (so the newest game is not refetched)."""
+    if ts is None:
+        return None
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    return ts + timedelta(seconds=1)
 
 
 def store_games(session: Session, user_id: int, games: Iterable[NormalizedGame]) -> int:

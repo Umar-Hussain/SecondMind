@@ -101,7 +101,10 @@ def analyze_game(game: NormalizedGame, depth: int | None = None, threshold: int 
     board = chess.Board()
     findings: list[Finding] = []
     left_theory = False
+    judged = 0  # own moves checked by the engine after leaving theory
     for ply, uci in enumerate(game.moves_uci[: s.opening_plies], start=1):
+        if judged >= s.judged_moves_after_theory:
+            break  # far enough out of the opening: later moves are middlegame, not a repertoire leak
         move = chess.Move.from_uci(uci)
         if board.turn != player:
             board.push(move)
@@ -131,13 +134,13 @@ def analyze_game(game: NormalizedGame, depth: int | None = None, threshold: int 
             continue
 
         # --- Ordinary rules ---------------------------------------------------
-        theory = masters.is_theory(fen, uci)
+        theory = masters.is_theory(fen, uci, local_only=True)
         if theory:
             # Master theory moves are trusted; no engine call needed.
             board.push(move)
             continue
-        loss = engine.eval_loss(fen, uci, depth=depth)
-        best = engine.evaluate(fen, depth=depth).best_move_uci
+        loss, best = engine.move_loss(fen, uci, depth=depth)
+        judged += 1
         if loss > threshold:
             findings.append(Finding(**base, kind="mistake", loss_cp=loss, reference_move=best,
                                     reason=f"lost {loss} cp versus the engine best"))

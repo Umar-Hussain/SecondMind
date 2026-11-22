@@ -12,9 +12,10 @@ from dataclasses import dataclass, field
 
 import chess
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.models import Game, Leak, Repertoire, RepertoireDeviation, UncoveredLine, User
 from app.schemas import NormalizedGame
 from app.tools import deviations, leaks
@@ -77,11 +78,15 @@ def run_analysis(session: Session, user_id: int, max_games: int = 200, depth: in
     user = session.get(User, user_id)
     if user is None:
         raise KeyError(f"user {user_id} not found")
+    depth = depth or get_settings().analysis_depth
     summary = AnalysisSummary(user_id=user_id)
     if fetch:
         if progress:
             progress("download", 0, 1)
-        fetched, warnings = fetch_user_games(user, max_games=max_games)
+        # Only download what is new since the last fetch (per site); the first fetch gets everything.
+        since = {src: ts for src, ts in session.execute(
+            select(Game.source, func.max(Game.played_at)).where(Game.user_id == user_id).group_by(Game.source))}
+        fetched, warnings = fetch_user_games(user, max_games=max_games, since=since)
         summary.games_fetched, summary.warnings = len(fetched), warnings
         summary.games_new = store_games(session, user_id, fetched)
     games = user_games(session, user_id)[:max_games]

@@ -252,6 +252,21 @@ def eval_loss(fen: str, move_uci: str, depth: int | None = None) -> int:
     return max(0, best.cp_stm - move_cp)
 
 
+def move_loss(fen: str, move_uci: str, depth: int | None = None) -> tuple[int, str | None]:
+    """(centipawn loss of ``move_uci`` vs the best move, best move) with as few searches as possible.
+
+    One multi-PV search usually contains the played move (players mostly pick reasonable
+    moves); only when it does not is a second, restricted search needed.
+    """
+    ev = evaluate(fen, depth=depth, multipv=3)
+    cp = next((line.cp for line in ev.lines if line.move_uci == move_uci), None)
+    if cp is None:
+        cp = evaluate_moves(fen, [move_uci], depth=depth).get(move_uci)
+        if cp is None:
+            raise ValueError(f"illegal move {move_uci} in {fen}")
+    return max(0, ev.cp_stm - cp), ev.best_move_uci
+
+
 def cp_for(cp_white: int, color: str) -> int:
     """Convert a White-POV evaluation to the given player's POV."""
     return cp_white if color == "white" else -cp_white

@@ -54,7 +54,11 @@ class Settings(BaseSettings):
     stockfish_path: str = "engine/stockfish/stockfish-windows-x86-64-universal.exe"
     stockfish_threads: int = 2
     stockfish_hash_mb: int = 128
-    engine_depth: int = 16  # default batch depth (spec: 16-18)
+    engine_depth: int = 16  # default depth for single positions (explanations, recommendations)
+    # Batch analysis of a user's games: depth 12 finds the opening mistakes above the 80 cp
+    # threshold at a fraction of the time of depth 16.
+    analysis_depth: int = 12
+    judged_moves_after_theory: int = 3  # own moves checked after a game leaves known theory
 
     # --- Storage -----------------------------------------------------------
     database_url: str = f"sqlite:///{(ROOT_DIR / 'repertoire.db').as_posix()}"

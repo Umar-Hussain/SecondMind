@@ -23,8 +23,9 @@ from functools import lru_cache
 
 import chess
 
-from app.config import CORPUS_DIR, get_settings
+from app.config import CORPUS_DIR, DATA_DIR, get_settings
 from app.schemas import MasterMove, MasterStats
+from app.tools.engine import _Cache
 from app.tools.http import get_text
 from app.tools.openings import _eco_files
 from app.tools.pgn_utils import fen_key, read_pgn_games
@@ -75,10 +76,16 @@ def _pgn_index() -> dict[str, dict[str, list[int]]]:
     return {k: {m: list(v) for m, v in d.items()} for k, d in index.items()}
 
 
+_remote_cache = _Cache(DATA_DIR / "cache" / "masters_cache.sqlite")  # explorer answers survive restarts
+
+
 def _explorer(fen: str) -> MasterStats | None:
     s = get_settings()
     if s.offline or not s.lichess_token:
         return None
+    hit = _remote_cache.get(fen_key(fen))
+    if hit:
+        return MasterStats.model_validate({**hit, "fen": fen})
     try:
         body = get_text(
             "https://explorer.lichess.ovh/masters",
@@ -96,7 +103,9 @@ def _explorer(fen: str) -> MasterStats | None:
         )
         for m in data.get("moves", [])
     ]
-    return MasterStats(fen=fen, total_games=sum(m.games for m in moves), moves=moves, source="lichess-masters")
+    stats = MasterStats(fen=fen, total_games=sum(m.games for m in moves), moves=moves, source="lichess-masters")
+    _remote_cache.put(fen_key(fen), stats.model_dump())
+    return stats
 
 
 @lru_cache(maxsize=4096)
@@ -105,7 +114,11 @@ def master_moves(fen: str) -> MasterStats:
     remote = _explorer(fen)
     if remote and remote.total_games:
         return remote
+    return _local_stats(fen)
 
+
+def _local_stats(fen: str) -> MasterStats:
+    """Master statistics without the network: local master PGNs, else the ECO book."""
     key = fen_key(fen)
     board = chess.Board(fen) if len(fen.split()) >= 6 else chess.Board(key + " 0 1")
 
@@ -125,9 +138,21 @@ def master_moves(fen: str) -> MasterStats:
     return MasterStats(fen=fen, total_games=sum(m.games for m in moves), moves=moves, source="eco-book")
 
 
-def is_theory(fen: str, move_uci: str, min_share: float = 0.05) -> bool:
-    """A move is "theory" if masters play it in >= ``min_share`` of games here."""
-    stats = master_moves(fen)
+def is_theory(fen: str, move_uci: str, min_share: float = 0.05, local_only: bool = False) -> bool:
+    """A move is "theory" if masters play it in >= ``min_share`` of games here.
+
+    ``local_only`` (used when mining a user's games) never waits on the network: it uses an
+    already cached explorer answer if there is one, otherwise the local master PGNs and the
+    ECO book, where any book move counts as theory. Asking the explorer for every position
+    of 200 games used to take minutes at the explorer's rate limit.
+    """
+    if local_only:
+        cached = _remote_cache.get(fen_key(fen))
+        stats = MasterStats.model_validate({**cached, "fen": fen}) if cached else _local_stats(fen)
+        if stats.source == "eco-book":
+            return any(m.uci == move_uci for m in stats.moves)
+    else:
+        stats = master_moves(fen)
     if not stats.total_games:
         return False
     for m in stats.moves:
