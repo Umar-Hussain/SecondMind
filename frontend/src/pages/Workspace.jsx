@@ -4,6 +4,7 @@ import { api, fenKey } from "../api.js";
 import Board, { arrow } from "../components/Board.jsx";
 import EnginePanel from "../components/EnginePanel.jsx";
 import MoveBadge, { pawns } from "../components/MoveBadge.jsx";
+import { ARROW } from "../components/arrowColors.js";
 
 // Repertoire workspace, laid out like a Lichess study.
 //   left   : the repertoire's lines ("chapters") and notes for the current position
@@ -254,8 +255,8 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
   }
   const myColor = tree.color === "white" ? "w" : "b";
   const boardArrows = practice
-    ? (hint === 2 && node?.user_move ? [arrow(node.user_move, "rgba(21,120,27,.8)")] : [])
-    : stored.filter((m) => m.kind !== "opp").map((m) => arrow(m.uci, m.kind === "main" ? "rgba(21,120,27,.8)" : "rgba(21,120,27,.45)"));
+    ? (hint === 2 && node?.user_move ? [arrow(node.user_move, ARROW.good)] : [])
+    : stored.filter((m) => m.kind !== "opp").map((m) => arrow(m.uci, m.kind === "main" ? ARROW.good : ARROW.goodSoft));
   // Hint level 1 lights up the square of the piece to move.
   const boardHighlight = bad ? bad.uci : practice && hint === 1 && node?.user_move ? node.user_move.slice(0, 2).repeat(2) : last?.uci;
 
@@ -341,7 +342,7 @@ export default function Workspace({ repId, user, onBack, onOpen }) {
         <EnginePanel onInfo={setEvaluation} fen={fen} playerColor={tree.color} hideMasters compact />
         )}
         <div className="sv-moves">
-          {rows.length === 0 && <p className="muted small pad">Starting position. Pick a line on the left, a move below, or play on the board.</p>}
+          {rows.length === 0 && !practice && <p className="muted small pad">Starting position. Pick a line on the left, a move below, or play on the board.</p>}
           {rows.map(([i, w, b]) => (
             <div className="sv-row" key={i}>
               <span className="sv-num">{i / 2 + 1}</span>

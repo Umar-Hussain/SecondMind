@@ -1,0 +1,111 @@
+/* =====================================================================================
+   Midnight Gold design tokens (DESIGN.md section 2). Every colour in the app comes from
+   here. Dark is the default; [data-theme="light"] is the Daylight variant.
+   ===================================================================================== */
+:root {
+  /* Backgrounds */
+  --bg: #0b0e14;
+  --bg-deep: #07090d;
+  --surface: #131823;
+  --surface-alt: #1a2030;
+  --surface-hover: #212a3d;
+
+  /* Borders */
+  --border: #232b3b;
+  --border-hover: #36415a;
+
+  /* Text */
+  --text: #eef1f6;
+  --text-secondary: #b4bccb;
+  --text-tertiary: #8a93a6;
+
+  /* Accent: gold */
+  --accent: #e8b04b;
+  --accent-hover: #f2c46a;
+  --accent-strong: #c98f26;
+  --on-accent: #1a1204;
+
+  /* Chess semantics */
+  --success: #4ade80;
+  --error: #f26d6d;
+  --warning: #f5a524;
+  --info: #6aa8ff;
+
+  /* Board */
+  --board-light: #dfe4ec;
+  --board-dark: #7d8ea8;
+
+  /* RGB helpers */
+  --bg-rgb: 11, 14, 20;
+  --surface-rgb: 19, 24, 35;
+  --accent-rgb: 232, 176, 75;
+  --success-rgb: 74, 222, 128;
+  --error-rgb: 242, 109, 109;
+  --warning-rgb: 245, 165, 36;
+  --info-rgb: 106, 168, 255;
+
+  /* Shape and depth */
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .4), 0 2px 8px rgba(0, 0, 0, .25);
+  --shadow-2: 0 10px 30px rgba(0, 0, 0, .45);
+  --shadow-3: 0 24px 60px rgba(0, 0, 0, .55);
+  --glow: 0 0 0 1px rgba(var(--accent-rgb), .35), 0 8px 32px rgba(var(--accent-rgb), .18);
+  --ease: cubic-bezier(.2, .7, .2, 1);
+
+  /* Type */
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
+
+  /* Aliases kept so older component rules follow the theme */
+  --bg-2: var(--surface);
+  --bg-3: var(--surface-alt);
+  --bg-hover: var(--surface-hover);
+  --line: var(--border);
+  --muted: var(--text-tertiary);
+  --primary: var(--accent);
+  --primary-btn: var(--accent);
+  --primary-btn-hover: var(--accent-hover);
+  --primary-dim: rgba(var(--accent-rgb), .14);
+  --good: var(--success);
+  --good-dim: rgba(var(--success-rgb), .14);
+  --bad: var(--error);
+  --bad-dim: rgba(var(--error-rgb), .14);
+  --warn: var(--warning);
+  --warn-dim: rgba(var(--warning-rgb), .14);
+  --shadow: var(--shadow-1);
+  --panel-shadow: var(--shadow-1);
+
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  background: var(--bg);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #f6f4ef; --bg-deep: #ece8df; --surface: #ffffff; --surface-alt: #f8f6f1; --surface-hover: #f0ece3;
+  --border: #e2ddd2; --border-hover: #cfc7b6;
+  --text: #15181f; --text-secondary: #3c4250; --text-tertiary: #646b7a;
+  --accent: #a8730f; --accent-hover: #8f610a; --accent-strong: #75500a; --on-accent: #ffffff;
+  --success: #1f8a4c; --error: #c23b3b; --warning: #b26a00; --info: #2563c9;
+  --bg-rgb: 246, 244, 239; --surface-rgb: 255, 255, 255; --accent-rgb: 168, 115, 15;
+  --success-rgb: 31, 138, 76; --error-rgb: 194, 59, 59; --warning-rgb: 178, 106, 0; --info-rgb: 37, 99, 201;
+  --shadow-1: 0 1px 2px rgba(20, 18, 10, .06), 0 2px 8px rgba(20, 18, 10, .06);
+  --shadow-2: 0 10px 30px rgba(20, 18, 10, .12);
+  --shadow-3: 0 24px 60px rgba(20, 18, 10, .16);
+  color-scheme: light;
+}
+
+/* Scroll reveal (useReveal adds .in once the element is visible) */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s var(--ease); }
+.reveal.in { opacity: 1; transform: none; }
+.reveal[data-delay="1"] { transition-delay: .08s; }
+.reveal[data-delay="2"] { transition-delay: .16s; }
+.reveal[data-delay="3"] { transition-delay: .24s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  .reveal { opacity: 1; transform: none; }
+}

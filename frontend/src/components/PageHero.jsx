@@ -24,8 +24,8 @@ export default function PageHero({ title, text, steps = [], fen, arrows = [], or
       {fen && (
         <div className="ph-board" aria-hidden="true">
           <Chessboard position={fen} boardOrientation={orientation} boardWidth={heroBoard()} arePiecesDraggable={false}
-            customArrows={arrows} customLightSquareStyle={{ backgroundColor: "#f0d9b5" }}
-            customDarkSquareStyle={{ backgroundColor: "#b58863" }} animationDuration={0} />
+            customArrows={arrows} customLightSquareStyle={{ backgroundColor: "var(--board-light)" }}
+            customDarkSquareStyle={{ backgroundColor: "var(--board-dark)" }} animationDuration={0} />
         </div>
       )}
     </div>

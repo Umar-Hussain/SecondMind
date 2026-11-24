@@ -4,7 +4,7 @@ import { Chessboard } from "react-chessboard";
 // The last move is highlighted in Lichess green.
 export default function MiniBoard({ fen, orientation = "white", width = 240, lastMove }) {
   const hl = lastMove
-    ? { [lastMove.slice(0, 2)]: { background: "rgba(155,199,0,.41)" }, [lastMove.slice(2, 4)]: { background: "rgba(155,199,0,.41)" } }
+    ? { [lastMove.slice(0, 2)]: { background: "rgba(var(--accent-rgb), .36)" }, [lastMove.slice(2, 4)]: { background: "rgba(var(--accent-rgb), .36)" } }
     : {};
   return (
     <Chessboard
@@ -13,8 +13,8 @@ export default function MiniBoard({ fen, orientation = "white", width = 240, las
       boardWidth={width}
       arePiecesDraggable={false}
       showBoardNotation={false}
-      customLightSquareStyle={{ backgroundColor: "#f0d9b5" }}
-      customDarkSquareStyle={{ backgroundColor: "#b58863" }}
+      customLightSquareStyle={{ backgroundColor: "var(--board-light)" }}
+      customDarkSquareStyle={{ backgroundColor: "var(--board-dark)" }}
       customSquareStyles={hl}
       animationDuration={0}
     />

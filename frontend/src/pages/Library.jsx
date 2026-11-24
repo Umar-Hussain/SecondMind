@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import { ImportForm } from "./Repertoires.jsx";
+import PageHero from "../components/PageHero.jsx";
 import SearchBox from "../components/SearchBox.jsx";
 import MiniBoard from "../components/MiniBoard.jsx";
 
@@ -54,9 +55,20 @@ export default function Library({ user, onOpen, reloadMine }) {
       )}
       {msg && <p className="ok">{msg}</p>}
       {items === null && <p className="muted">Loading…</p>}
-      {items && shown.length === 0 && (
-        <p className="muted">{query ? `Nothing matches “${query}”.` : isAdmin ? "The library is empty. Publish the first repertoire." : "The library is empty for now."}</p>
-      )}
+      {items && shown.length === 0 && (query || filter !== "all"
+        ? <p className="muted">Nothing matches{query ? ` “${query}”` : ""}.</p>
+        : (
+          <PageHero title={isAdmin ? "Start the library" : "The library is being stocked"}
+            fen="rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 1 5"
+            text={isAdmin
+              ? "Publish ready-made repertoires here. Every player can copy one into their own list, practise it and track it against their games."
+              : "Ready-made repertoires will appear here, to copy and practise. Meanwhile, import your own from a PGN file or a Lichess study on the Repertoires page."}
+            steps={[["Pick an opening", "Search by name, ECO code or moves like 1.e4 c6."],
+              ["Copy it", "One click adds it to your repertoires."],
+              ["Practise it", "The app plays the opponent's moves; you answer."]]}>
+            {isAdmin && <button className="primary big" onClick={() => setPublishing(true)}>＋ Publish a repertoire</button>}
+          </PageHero>
+        ))}
       <div className="opening-grid">
         {shown.map((r) => (
           <article key={r.id} className="opening-card" onClick={() => onOpen(r.id)} tabIndex={0}

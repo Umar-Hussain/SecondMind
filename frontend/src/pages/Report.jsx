@@ -3,6 +3,7 @@ import { api } from "../api.js";
 import Board, { arrow } from "../components/Board.jsx";
 import PageHero from "../components/PageHero.jsx";
 import { useOnAnalysisDone } from "../analysisJob.js";
+import { ARROW } from "../components/arrowColors.js";
 
 const BADGE = { master: "master choice", engine: "engine choice", repertoire: "repertoire move" };
 const KIND = { mistake: "mistake", deviation: "out of book", gambit_deviation: "gambit error", defender_trap: "trap", gambit_note: "gambit note" };
@@ -41,7 +42,7 @@ export default function Report({ analysis, goDeviations }) {
     return (
       <section>
         <PageHero title="Gap report" fen="rnbqkb1r/pppp1ppp/5n2/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 2 3"
-          arrows={[["d1", "f3", "rgba(204,51,51,.85)"], ["d2", "d3", "rgba(21,120,27,.85)"]]}
+          arrows={[["d1", "f3", ARROW.played], ["d2", "d3", ARROW.good]]}
           text={running
             ? "Your report is being prepared in the background. You can use other pages meanwhile; it appears here when it is ready."
             : noGames
@@ -93,7 +94,7 @@ export default function Report({ analysis, goDeviations }) {
         </ol>
         <div className="rp-detail">
           <Board fen={item.position_fen} orientation={item.color} explore={false} max={460} canDrag={() => false}
-            arrows={[arrow(item.played, "rgba(204,51,51,.85)"), arrow(item.recommended, "rgba(21,120,27,.85)")].filter(Boolean)} />
+            arrows={[arrow(item.played, ARROW.played), arrow(item.recommended, ARROW.good)].filter(Boolean)} />
           <div className="rp-text">
             <h3>{item.opening}</h3>
             {!item.is_gambit_note && (

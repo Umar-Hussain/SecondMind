@@ -5,6 +5,7 @@ import Board, { arrow } from "../components/Board.jsx";
 import PageHero from "../components/PageHero.jsx";
 import CompareView from "../components/CompareView.jsx";
 import { useOnAnalysisDone } from "../analysisJob.js";
+import { ARROW } from "../components/arrowColors.js";
 
 // Deviations page as a guided flow:
 //   1. link a Lichess and/or Chess.com username (public names only, never a password);
@@ -14,10 +15,10 @@ import { useOnAnalysisDone } from "../analysisJob.js";
 //      opening the exact position where the game left the repertoire, shown on the board.
 // Red arrow = what you played, green = what your repertoire says, blue = the engine-checked
 // recommendation, orange = an opponent move your repertoire has no answer to yet.
-const RED = "rgba(204,51,51,.85)";
-const GREEN = "rgba(21,120,27,.85)";
-const BLUE = "rgba(54,146,231,.85)";
-const ORANGE = "rgba(216,80,0,.85)";
+const RED = ARROW.played;
+const GREEN = ARROW.good;
+const BLUE = ARROW.engine;
+const ORANGE = ARROW.gap;
 
 const STATE_LABEL = {
   in_book: "stayed in your repertoire",
@@ -74,7 +75,7 @@ export default function Deviations({ user, setUser, onOpen, goLibrary, analysis 
 
       {editing && step === 1 ? (
         <PageHero title="Which account do you play on?" fen={HERO_FEN} orientation="black"
-          arrows={[["c8", "g4", "rgba(204,51,51,.85)"], ["c8", "f5", "rgba(21,120,27,.85)"]]}
+          arrows={[["c8", "g4", ARROW.played], ["c8", "f5", ARROW.good]]}
           text="SecondMind downloads your recent games, finds the openings you really play and shows the exact move where each game left your repertoire."
           steps={[["Link your account", "Your public Lichess or Chess.com name. We never ask for a password."],
             ["Fetch your games", "Runs in the background, so you can keep using the app."],
@@ -107,7 +108,7 @@ export default function Deviations({ user, setUser, onOpen, goLibrary, analysis 
       {error && <div className="alert">{error}</div>}
       {step === 2 && !editing && (
         <PageHero title={busy ? "Fetching your games…" : "Ready to fetch your games"} fen={HERO_FEN} orientation="black"
-          arrows={[["c8", "g4", "rgba(204,51,51,.85)"], ["c8", "f5", "rgba(21,120,27,.85)"]]}
+          arrows={[["c8", "g4", ARROW.played], ["c8", "f5", ARROW.good]]}
           text={busy
             ? "This runs on our server. Feel free to open other pages: the bar at the top shows the progress and this page fills in by itself."
             : "We download up to 200 of your recent games, check them with Stockfish and compare every opening with your repertoires."}
@@ -170,10 +171,10 @@ export default function Deviations({ user, setUser, onOpen, goLibrary, analysis 
                     should have played.
                   </p>
                   <ul className="dev-legend">
-                    <li><i style={{ background: "#629924" }} />stayed in your repertoire</li>
-                    <li><i style={{ background: "#cc3333" }} />you left your repertoire</li>
-                    <li><i style={{ background: "#d85000" }} />opponent played a move you have not prepared</li>
-                    <li><i style={{ background: "#5c5955" }} />no repertoire covers it</li>
+                    <li><i style={{ background: "var(--success)" }} />stayed in your repertoire</li>
+                    <li><i style={{ background: "var(--error)" }} />you left your repertoire</li>
+                    <li><i style={{ background: "var(--warning)" }} />opponent played a move you have not prepared</li>
+                    <li><i style={{ background: "var(--text-tertiary)" }} />no repertoire covers it</li>
                   </ul>
                 </div>
               )}
@@ -325,7 +326,7 @@ function OpeningDetail({ o, exitIdx, setExitIdx, onOpen, goLibrary, reload }) {
             Your repertoire plays <b className="good">{exit.repertoire_san}</b>.
           </p>
           {detail && rec && rec !== exit.repertoire_move && (
-            <p>Stockfish and the master games suggest <b style={{ color: "#3692e7" }}>{detail.recommended_san}</b> as an option too.</p>
+            <p>Stockfish and the master games suggest <b style={{ color: "var(--info)" }}>{detail.recommended_san}</b> as an option too.</p>
           )}
           {!detail && exit.deviation_id && <p className="muted small">Writing the explanation…</p>}
           {detail?.explanation && <p>{detail.explanation}</p>}
@@ -338,7 +339,7 @@ function OpeningDetail({ o, exitIdx, setExitIdx, onOpen, goLibrary, reload }) {
       ) : (
         <>
           <p className="dev-say">
-            In <b>{exit.games}</b> game{exit.games === 1 ? "" : "s"} your opponent played <b style={{ color: "#d85000" }}>{exit.played_san}</b> here,
+            In <b>{exit.games}</b> game{exit.games === 1 ? "" : "s"} your opponent played <b style={{ color: "var(--warning)" }}>{exit.played_san}</b> here,
             and your repertoire has no answer to it yet.
           </p>
           {exit.suggested_san ? (

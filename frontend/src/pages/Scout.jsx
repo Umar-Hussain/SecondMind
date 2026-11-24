@@ -5,13 +5,14 @@ import PageHero from "../components/PageHero.jsx";
 import Board from "../components/Board.jsx";
 import EnginePanel from "../components/EnginePanel.jsx";
 import { buildTree, positionData, scoreColor } from "../engine/openingTree.js";
+import { ARROW } from "../components/arrowColors.js";
 
 // Arrow colours for suggestions (your move). Opponent moves use scoreColor().
 const SUGGEST = {
-  repertoire: { color: "rgba(54,146,231,0.95)", label: "Your repertoire" },
-  recommended: { color: "rgba(155,199,0,0.95)", label: "Recommended" },
-  weak: { color: "rgba(230,140,30,0.95)", label: "Their weak spot" },
-  punish: { color: "rgba(210,70,170,0.95)", label: "Punish their mistake" },
+  repertoire: { color: ARROW.gold, label: "Your repertoire" },
+  recommended: { color: ARROW.engine, label: "Recommended" },
+  weak: { color: ARROW.gap, label: "Their weak spot" },
+  punish: { color: ARROW.punish, label: "Punish their mistake" },
 };
 const SPEEDS = ["all", "bullet", "blitz", "rapid", "classical"];
 
@@ -157,7 +158,7 @@ export default function Scout() {
   merged.sort((a, b) => PRIORITY.indexOf(a.reasons[0].type) - PRIORITY.indexOf(b.reasons[0].type));
 
   const arrows = theirTurn
-    ? pos.moves.slice(0, 6).map((m) => [m.from, m.to, hover === m.uci ? "rgba(54,146,231,0.95)" : scoreColor(m.score)])
+    ? pos.moves.slice(0, 6).map((m) => [m.from, m.to, hover === m.uci ? ARROW.gold : scoreColor(m.score)])
     : merged.map((m) => [m.uci.slice(0, 2), m.uci.slice(2, 4), SUGGEST[m.reasons[0].type].color]);
 
   function play(uci, san) { setPath([...path, { uci, san }]); }
@@ -184,7 +185,7 @@ export default function Scout() {
     return (
       <section>
         <PageHero title="Prepare for an opponent" fen="r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3"
-          arrows={[["f1", "b5", "rgba(21,120,27,.85)"], ["f1", "c4", "rgba(54,146,231,.7)"]]}
+          arrows={[["f1", "b5", ARROW.good], ["f1", "c4", ARROW.engine]]}
           text="Type your next opponent's username. You will see the openings they really play, where they go wrong, and what you should play against them."
           steps={[["Load their games", "Up to 200 recent games from Lichess or Chess.com."],
             ["Walk their repertoire", "Their moves on the board, with how often and how well they score."],

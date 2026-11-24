@@ -3,6 +3,7 @@ import { api } from "../api.js";
 import Board, { arrow } from "../components/Board.jsx";
 import PageHero from "../components/PageHero.jsx";
 import { useOnAnalysisDone } from "../analysisJob.js";
+import { ARROW } from "../components/arrowColors.js";
 
 // Train: quizzes made from the positions where your games went wrong. Answer by playing the
 // move on the board; spaced repetition brings each quiz back just before you would forget it.
@@ -57,7 +58,7 @@ export default function Train({ goDeviations }) {
     return (
       <section>
         <PageHero title="Train" fen="rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3"
-          arrows={[["e4", "e5", "rgba(21,120,27,.85)"]]}
+          arrows={[["e4", "e5", ARROW.good]]}
           text={noLeaks
             ? "Short quizzes built from the positions where your own games went wrong. Fetch your games first: quizzes are then created automatically."
             : s.total
@@ -78,8 +79,8 @@ export default function Train({ goDeviations }) {
 
   const orientation = quiz.fen.split(" ")[1] === "b" ? "black" : "white";
   const arrows = result ? [
-    !result.correct && answer ? arrow(answer.uci, "rgba(204,51,51,.85)") : null,
-    arrow(result.correct_move, "rgba(21,120,27,.85)"),
+    !result.correct && answer ? arrow(answer.uci, ARROW.played) : null,
+    arrow(result.correct_move, ARROW.good),
   ].filter(Boolean) : [];
   return (
     <section className="train-page fade-in">

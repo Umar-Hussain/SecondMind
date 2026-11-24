@@ -38,8 +38,9 @@ export default function Profile({ user, setUser, analysis }) {
   const summary = job?.state === "done" ? job.summary : null;
 
   return (
-    <section className="narrow">
+    <section className="profile-page fade-in">
       <h2>Profile</h2>
+      <div className="profile-grid">
       <div className="card">
         <p className="muted small">Signed in as <b>{user.username}</b>{user.role === "admin" && <span className="tag library">admin</span>}</p>
         <div className="form stack">
@@ -49,9 +50,10 @@ export default function Profile({ user, setUser, analysis }) {
           <label>Rating<input type="number" value={form.rating} onChange={set("rating")} /></label>
         </div>
         <p className="muted small">Only public usernames — SecondMind never asks for a chess-site password.</p>
-        <button className="primary" onClick={save}>Save profile</button>
+        <button onClick={save}>Save profile</button>
         {msg && <span className="ok small"> {msg}</span>}
       </div>
+      <div className="profile-side">
       <div className="card">
         <h3>Analyse my games</h3>
         <p className="muted small">Fetches your recent rated games from both sites, finds opening leaks and compares them with your repertoires.</p>
@@ -70,6 +72,8 @@ export default function Profile({ user, setUser, analysis }) {
         )}
       </div>
       <PasswordCard />
+      </div>
+      </div>
       {error && <div className="alert">{error}</div>}
     </section>
   );
@@ -106,7 +110,7 @@ function PasswordCard() {
         <label>New password<input type="password" autoComplete="new-password" minLength={8} value={form.next} onChange={set("next")} required /></label>
         <label>Repeat new password<input type="password" autoComplete="new-password" minLength={8} value={form.again} onChange={set("again")} required /></label>
       </div>
-      <button className="primary">Change password</button>
+      <button>Change password</button>
       {msg && <span className="ok small"> {msg}</span>}
       {error && <div className="alert">{error}</div>}
     </form>

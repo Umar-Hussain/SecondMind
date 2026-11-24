@@ -3,9 +3,9 @@ import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import EvalBar from "./EvalBar.jsx";
 
-// Lichess "brown" board colours.
-const LIGHT = { backgroundColor: "#f0d9b5" };
-const DARK = { backgroundColor: "#b58863" };
+// Board colours come from the theme tokens (--board-light / --board-dark).
+const LIGHT = { backgroundColor: "var(--board-light)" };
+const DARK = { backgroundColor: "var(--board-dark)" };
 
 // Interactive board. Moves are validated client-side with chess.js; the parent
 // gets the attempted move. In explore mode the board also keeps its own position
@@ -41,7 +41,7 @@ export default function Board({ fen, orientation = "white", arrows = [], onMove,
   }
 
   const squareStyles = highlight
-    ? { [highlight.slice(0, 2)]: { background: "rgba(155,199,0,.41)" }, [highlight.slice(2, 4)]: { background: "rgba(155,199,0,.41)" } }
+    ? { [highlight.slice(0, 2)]: { background: "rgba(var(--accent-rgb), .36)" }, [highlight.slice(2, 4)]: { background: "rgba(var(--accent-rgb), .36)" } }
     : {};
 
   return (
@@ -58,7 +58,7 @@ export default function Board({ fen, orientation = "white", arrows = [], onMove,
         customLightSquareStyle={LIGHT}
         customDarkSquareStyle={DARK}
         customSquareStyles={squareStyles}
-        customBoardStyle={{ borderRadius: "3px", boxShadow: "0 2px 12px rgba(0,0,0,.45)" }}
+        customBoardStyle={{ borderRadius: "6px", boxShadow: "var(--shadow-2)" }}
         animationDuration={150}
       />
       </div>

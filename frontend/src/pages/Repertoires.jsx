@@ -71,6 +71,20 @@ export default function Repertoires({ repertoires, reload, onOpen, goLibrary }) 
         {shown.length > 0 && (
           <div className="study-grid">
             {shown.map((r) => <StudyItem key={r.id} rep={r} onOpen={() => onOpen(r.id)} onDelete={() => remove(r)} />)}
+            {!query && (
+              <>
+                <button className="study-add" onClick={() => setShowImport(true)}>
+                  <span className="sa-plus" aria-hidden="true">＋</span>
+                  <b>Import a repertoire</b>
+                  <span className="muted small">PGN file, Lichess study link or typed moves</span>
+                </button>
+                <button className="study-add" onClick={goLibrary}>
+                  <span className="sa-plus" aria-hidden="true">♞</span>
+                  <b>Browse the opening library</b>
+                  <span className="muted small">Ready-made repertoires to copy and practise</span>
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

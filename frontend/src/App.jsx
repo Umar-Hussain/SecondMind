@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, getToken, setToken } from "./api.js";
 import { useAnalysisJob } from "./analysisJob.js";
+import { useScrolled } from "./components/motion.jsx";
 import Brand from "./components/Brand.jsx";
 import Auth from "./pages/Auth.jsx";
 import Landing from "./pages/Landing.jsx";
@@ -34,6 +35,7 @@ export default function App() {
   const [authMode, setAuthMode] = useState(null); // null = landing page, else "login" / "signup"
   const [menu, setMenu] = useState(false);
   const analysis = useAnalysisJob(user); // background game fetch, survives page changes
+  const scrolled = useScrolled(); // top bar gets a solid background once the page scrolls
 
   // Restore the session from the stored token.
   useEffect(() => {
@@ -80,12 +82,14 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="topbar">
+      <header className={`topbar ${scrolled ? "scrolled" : ""}`}>
         <button className="brand-btn" onClick={() => go("repertoires")}><Brand /></button>
         <nav className={menu ? "open" : ""}>
           {[...PAGES, ...(user.role === "admin" ? [["users", "Users"]] : [])].map(([id, label]) => (
             <button key={id} className={page === id && !openRep ? "active" : ""} onClick={() => go(id)}>{label}</button>
           ))}
+          {/* phones: the username button is hidden, so Profile lives in the menu */}
+          <button className={`nav-only-mobile ${page === "profile" ? "active" : ""}`} onClick={() => go("profile")}>Profile</button>
         </nav>
         <div className="topbar-right">
           <JobPill analysis={analysis} onOpen={() => { analysis.markSeen(); go(analysis.job?.kind === "report" ? "report" : "deviations"); }} />
