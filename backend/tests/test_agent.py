@@ -1,4 +1,4 @@
-"""Phase 13: agent loop on fixtures with a scripted model."""
+"""agent loop on fixtures with a scripted model."""
 
 from types import SimpleNamespace
 

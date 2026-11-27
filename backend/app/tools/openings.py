@@ -1,4 +1,4 @@
-"""ECO opening classification (spec Phase 4).
+"""ECO opening classification.
 
 Builds a lookup from *position* (board part of the FEN plus side to move) to
 the deepest ECO entry reaching that position, then walks a game and keeps the
@@ -90,7 +90,7 @@ def lookup_position(board: chess.Board) -> tuple[str, str] | None:
 
 
 def gambit_entries() -> list[tuple[str, str, int]]:
-    """Every ECO entry whose name contains 'Gambit' (candidate gambits, spec 8.3)."""
+    """Every ECO entry whose name contains 'Gambit' (candidate gambits)."""
     return sorted({v for v in _table().values() if "Gambit" in v[1]})
 
 

@@ -1,4 +1,4 @@
-"""Delivery: calendar (.ics) reminders (spec 11.4, Phase 17).
+"""Delivery: calendar (.ics) reminders.
 
 The web app is the only delivery channel; the scheduled jobs prepare
 briefings and due quizzes, and these calendar events remind the player to

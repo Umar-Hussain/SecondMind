@@ -1,4 +1,4 @@
-"""Chess.com Published-Data API client (spec Phase 3).
+"""Chess.com Published-Data API client.
 
 Flow::
 

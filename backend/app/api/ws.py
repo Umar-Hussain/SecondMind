@@ -1,4 +1,4 @@
-"""Live Stockfish analysis over WebSocket (spec 5.1.3, 8.9).
+"""Live Stockfish analysis over WebSocket.
 
 Protocol: the client sends ``{"fen": "..."}``; the server streams
 ``{"type": "info", depth, cp_white, mate, lines: [...], masters: [...]}`` updates.

@@ -1,4 +1,4 @@
-"""Phase 5: Stockfish wrapper (requires the binary; skipped otherwise)."""
+"""Stockfish wrapper (requires the binary; skipped otherwise)."""
 
 import asyncio
 

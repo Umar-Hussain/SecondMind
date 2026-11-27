@@ -1,4 +1,4 @@
-"""Merge games from both platforms and store them (spec 5.1, Phase 3 step 4).
+"""Merge games from both platforms and store them.
 
 Duplicates are removed by:
 

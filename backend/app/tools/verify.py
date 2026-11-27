@@ -1,4 +1,4 @@
-"""Verification guard (spec 7, 8.7, Phase 10).
+"""Verification guard.
 
 Hard rule: no move, evaluation or citation produced by the LLM reaches the
 user unless this guard passes. Pipelines retry the model once with the

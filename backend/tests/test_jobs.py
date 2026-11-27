@@ -1,4 +1,4 @@
-"""Phase 18: running a job twice does not duplicate games, quizzes or reviews."""
+"""running a job twice does not duplicate games, quizzes or reviews."""
 
 import pytest
 from sqlalchemy import func, select

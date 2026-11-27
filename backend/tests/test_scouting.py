@@ -1,4 +1,4 @@
-"""Phase 15: opponent profile, extra lines and briefing on fixture data."""
+"""opponent profile, extra lines and briefing on fixture data."""
 
 import chess
 import pytest

@@ -1,4 +1,4 @@
-"""REST API (spec 11.1, Phase 25).
+"""REST API.
 
 Thin layer: every route validates input, calls a tool or service, and returns
 already-verified objects. No chess fact is created here.

@@ -5,7 +5,7 @@ Two families live here:
 * **Tool / API schemas** (``NormalizedGame``, ``EngineEval`` ...) describe facts
   produced by deterministic code.
 * **LLM structured-output schemas** (``GapReport``, ``Briefing``, ``Quiz`` ...,
-  spec 9.3) describe what the model must return. ``generate_structured`` in
+  ) describe what the model must return. ``generate_structured`` in
   ``llm/client.py`` validates every model response against one of these.
 """
 
@@ -147,7 +147,7 @@ class RetrievedDoc(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# LLM structured outputs (spec 9.3)
+# LLM structured outputs
 # ---------------------------------------------------------------------------
 
 

@@ -1,4 +1,4 @@
-"""Phase 8: repertoire deviation analysis and ranking on the fixtures."""
+"""repertoire deviation analysis and ranking on the fixtures."""
 
 import pytest
 

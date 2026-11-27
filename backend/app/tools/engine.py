@@ -1,16 +1,16 @@
-"""Stockfish wrapper (spec Phase 5).
+"""Stockfish wrapper.
 
 Responsibilities
 
 * One managed **batch** engine process guarded by a lock, used by leak mining,
   the recommender, deviation judging and verification.
 * A **separate** async engine process per live-analysis stream, so the live
-  board never blocks batch jobs (spec B5 pitfall).
+  board never blocks batch jobs.
 * Results cached by ``(fen, depth, multipv, restriction)`` in memory and in a
   small SQLite file, because the same opening positions recur constantly.
 * Restricted root-move analysis (``root_moves``) for gambit-aware evaluation.
 
-Perspective convention (spec 8.1 step 6 / risks table):
+Perspective convention:
 
 * ``cp_white`` — White's point of view, used only for the evaluation bar.
 * ``cp_stm`` and every ``EngineLine.cp`` — side to move's point of view.
@@ -220,7 +220,7 @@ def evaluate(fen: str, depth: int | None = None, multipv: int = 1) -> EngineEval
 def evaluate_restricted(
     fen: str, allowed_moves_uci: list[str], depth: int | None = None, multipv: int | None = None
 ) -> EngineEval:
-    """Analyse only the given root moves (gambit-aware evaluation, spec 8.3)."""
+    """Analyse only the given root moves (gambit-aware evaluation)."""
     depth = depth or get_settings().engine_depth
     multipv = multipv or len(allowed_moves_uci)
     key = _cache_key(fen, depth, multipv, allowed_moves_uci)

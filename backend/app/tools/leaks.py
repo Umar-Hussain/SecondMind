@@ -1,4 +1,4 @@
-"""Leak mining (spec 5.2, 8.1, Phase 6).
+"""Leak mining.
 
 A *leak* is a repeated ``(color, position, move)`` that costs the player
 evaluation or results. Procedure per game:
@@ -13,7 +13,7 @@ evaluation or results. Procedure per game:
 3. Aggregate by ``(color, fen_key, played_move)`` and rank by
    ``frequency x average loss``.
 4. A deviation alone is not a leak: it is kept only when the engine confirms a
-   real loss or the player repeats it with poor results (spec 8.1 step 5).
+   real loss or the player repeats it with poor results.
 
 All evaluations are from the player's point of view.
 """

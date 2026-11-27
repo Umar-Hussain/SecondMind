@@ -79,7 +79,7 @@ class Settings(BaseSettings):
     offline: bool = False
     record_fixtures: bool = False
 
-    # --- Chess rule thresholds (spec section 8) ----------------------------
+    # --- Chess rule thresholds ----------------------------
     mistake_threshold_cp: int = 80     # leak / deviation "mistake" cutoff
     harmless_threshold_cp: int = 30    # deviation considered harmless
     repertoire_issue_cp: int = 50      # repertoire move worse than best by this

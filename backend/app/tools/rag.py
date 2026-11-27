@@ -1,4 +1,4 @@
-"""Theory corpus and hybrid retrieval (spec 9.5, Phase 9).
+"""Theory corpus and hybrid retrieval.
 
 Corpus
 

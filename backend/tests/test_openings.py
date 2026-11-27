@@ -1,4 +1,4 @@
-"""Phase 4: ECO classification."""
+"""ECO classification."""
 
 from app.tools.openings import classify, family, gambit_entries
 from app.tools.pgn_utils import san_line_to_uci

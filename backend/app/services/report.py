@@ -1,10 +1,10 @@
-"""Personalized gap report (spec 5.5, Phase 14).
+"""Personalized gap report.
 
 For each top leak: the player's move, the recommended move (from the
 recommender, with its master/engine source and reason), the engine loss, the
 retrieved theory, illustrating master games, and an explanation.
 
-Explanations are produced in one of four *conditions* (spec 13), so the
+Explanations are produced in one of four *conditions*, so the
 evaluation can measure what each layer adds:
 
 * ``template`` (condition 0) — no LLM: engine facts + fixed templates;
@@ -187,7 +187,7 @@ def build_gap_report(leaks: list[LeakOut], mode: str = "full", depth: int | None
 
 
 # ---------------------------------------------------------------------------
-# Deviation detail view (spec 8.8 "Detail view")
+# Deviation detail view
 # ---------------------------------------------------------------------------
 
 

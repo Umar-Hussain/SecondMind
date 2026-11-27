@@ -1,4 +1,4 @@
-"""Phase 1 smoke test: the API boots and answers /health."""
+"""the API boots and answers /health."""
 
 from fastapi.testclient import TestClient
 

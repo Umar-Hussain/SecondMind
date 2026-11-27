@@ -1,4 +1,4 @@
-"""LLM wrapper: structured output, tool use, retries, logging (spec 9.1, Phase 12).
+"""LLM wrapper: structured output, tool use, retries, logging.
 
 Two backends share one interface:
 

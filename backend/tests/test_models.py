@@ -1,4 +1,4 @@
-"""Phase 2: tables are created and a round-trip insert/read works."""
+"""tables are created and a round-trip insert/read works."""
 
 from sqlalchemy import select
 

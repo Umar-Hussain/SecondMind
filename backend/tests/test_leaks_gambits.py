@@ -1,4 +1,4 @@
-"""Phase 6: leak mining and gambit handling on the fixture games."""
+"""leak mining and gambit handling on the fixture games."""
 
 import pytest
 

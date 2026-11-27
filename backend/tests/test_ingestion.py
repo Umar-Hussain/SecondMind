@@ -1,4 +1,4 @@
-"""Phase 3: Lichess + Chess.com ingestion against saved fixtures."""
+"""Lichess + Chess.com ingestion against saved fixtures."""
 
 import pytest
 

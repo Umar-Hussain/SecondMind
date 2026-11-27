@@ -1,4 +1,4 @@
-"""SecondMind evaluation (spec 13, Phase 26; assignment section 8).
+"""SecondMind evaluation (retrieval, gambit handling, recommender, guard).
 
     python eval/run_eval.py               # everything that can run (offline, fixtures)
     python eval/run_eval.py --only retrieval gambit

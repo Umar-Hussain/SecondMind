@@ -1,4 +1,4 @@
-"""Phase 11: the five recommender cases from the specification."""
+"""the five recommender cases from the specification."""
 
 import chess
 import pytest

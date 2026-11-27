@@ -1,4 +1,4 @@
-"""Gambit registry, detection and gambit-aware evaluation (spec 5.3, 8.3, Phase 6).
+"""Gambit registry, detection and gambit-aware evaluation.
 
 Rules this module enforces
 
@@ -28,7 +28,7 @@ from app.tools.openings import gambit_entries, lookup_position
 from app.tools.pgn_utils import fen_key, material_balance, san_line_to_uci
 
 GAMBITS_FILE = DATA_DIR / "gambits.json"
-BASELINE_TOLERANCE_CP = 150  # "far below the baseline" (spec 8.3)
+BASELINE_TOLERANCE_CP = 150  # "far below the baseline"
 
 
 @dataclass(frozen=True)
@@ -97,7 +97,7 @@ def get(gambit_id: str) -> GambitDef | None:
 
 
 def detect_gambit(moves_uci: list[str], color: str) -> GambitMatch | None:
-    """Return the gambit this game follows, if any (spec 8.3 detection).
+    """Return the gambit this game follows, if any.
 
     1. Curated trigger prefix (longest trigger wins, e.g. Milner-Barry over French).
     2. Fallback: the player is >= 1 pawn down within the first 15 plies *and*
@@ -117,7 +117,7 @@ def detect_gambit(moves_uci: list[str], color: str) -> GambitMatch | None:
                            detected_by="trigger")
 
     # Fallback detection — never treat a mere material deficit as a gambit
-    # unless theory confirms it (spec B5 pitfall).
+    # unless theory confirms it.
     board = chess.Board()
     player = chess.WHITE if color == "white" else chess.BLACK
     for ply, uci in enumerate(moves_uci[:15], start=1):

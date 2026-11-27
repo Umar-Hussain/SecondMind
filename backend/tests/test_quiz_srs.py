@@ -1,4 +1,4 @@
-"""Phase 16: SM-2 intervals and engine-checked quiz validity."""
+"""SM-2 intervals and engine-checked quiz validity."""
 
 from datetime import datetime, timedelta, timezone
 

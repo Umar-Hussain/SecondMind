@@ -1,4 +1,4 @@
-"""Prompt templates (spec 9.2, Phase 12).
+"""Prompt templates.
 
 Every prompt:
 

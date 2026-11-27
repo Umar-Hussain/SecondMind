@@ -1,4 +1,4 @@
-"""Agent orchestrator with tool calling (spec 4, 9.4, Phase 13).
+"""Agent orchestrator with tool calling.
 
 The model plans the workflow and calls deterministic tools; this module runs
 the loop:

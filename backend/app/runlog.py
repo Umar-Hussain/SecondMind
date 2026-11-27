@@ -1,4 +1,4 @@
-"""Audit log for LLM calls, tool calls, verification results and jobs (spec 14).
+"""Audit log for LLM calls, tool calls, verification results and jobs.
 
 Every entry goes to the ``runs`` table. Logging must never break the main
 flow, so failures to write are swallowed after printing a warning.

@@ -1,4 +1,4 @@
-"""Opponent scouting (spec 5.6, 8.4, Phase 15).
+"""Opponent scouting.
 
 Profile built from the opponent's own games (Lichess or Chess.com):
 

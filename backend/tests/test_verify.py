@@ -1,4 +1,4 @@
-"""Phase 10: verification guard — legal, illegal, engine-refuted and fake-citation cases."""
+"""verification guard — legal, illegal, engine-refuted and fake-citation cases."""
 
 import chess
 import pytest

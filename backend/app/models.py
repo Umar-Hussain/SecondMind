@@ -1,4 +1,4 @@
-"""SQLAlchemy tables (spec Phase 2).
+"""SQLAlchemy tables.
 
 JSON payloads (lists of moves, result counts, citations) are stored in ``*_json``
 text columns using SQLAlchemy's JSON type, which maps to TEXT on SQLite and to
@@ -363,7 +363,7 @@ class ChatMessage(Base):
 
 
 class Run(Base):
-    """Audit log: every LLM call, tool call and verification result (spec 14)."""
+    """Audit log: every LLM call, tool call and verification result."""
 
     __tablename__ = "runs"
 

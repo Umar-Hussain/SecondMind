@@ -1,4 +1,4 @@
-"""Extra preparation lines and novelties against one opponent (spec 5.8, 5.9, 8.4).
+"""Extra preparation lines and novelties against one opponent.
 
 Extra lines are *outside* the player's repertoire, follow popular master moves
 while they are sound (every player move comes from the recommender), are at

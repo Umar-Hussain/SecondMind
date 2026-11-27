@@ -1,6 +1,6 @@
 """Polite HTTP helper shared by the Lichess and Chess.com clients.
 
-* Retries with exponential backoff on HTTP 429 and 5xx (spec 14, risks table).
+* Retries with exponential backoff on HTTP 429 and 5xx.
 * A minimum delay between requests so we never hammer a public API.
 * Fixture mode: ``OFFLINE=1`` reads saved responses, ``RECORD_FIXTURES=1``
   writes live responses to disk so they can be replayed later.

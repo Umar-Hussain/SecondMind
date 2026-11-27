@@ -159,9 +159,9 @@ def _result_tag(color: str, result: str) -> tuple[str, str | None]:
 
 
 def _lichess_record(i: int, spec: Spec, me: str) -> dict:
-    game, sans, ucis = _play(spec.moves)
+    game, sans, ucis = _play
     played = BASE_DATE + timedelta(days=i, hours=i % 5)
-    res, winner = _result_tag(spec.color, spec.result)
+    res, winner = _result_tag
     white = me if spec.color == "white" else spec.opponent
     black = spec.opponent if spec.color == "white" else me
     game.headers.update({"Event": "Rated Rapid game", "Site": f"https://lichess.org/fx{i:06d}",
@@ -192,9 +192,9 @@ def _lichess_record(i: int, spec: Spec, me: str) -> dict:
 
 
 def _chesscom_record(i: int, spec: Spec, me: str) -> dict:
-    game, sans, _ = _play(spec.moves)
+    game, sans, _ = _play
     played = BASE_DATE + timedelta(days=i, hours=i % 5)
-    res, winner = _result_tag(spec.color, spec.result)
+    res, winner = _result_tag
     white = me if spec.color == "white" else spec.opponent
     black = spec.opponent if spec.color == "white" else me
     # Chess.com PGNs carry [%clk h:mm:ss] comments after every move.

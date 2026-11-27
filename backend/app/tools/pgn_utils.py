@@ -21,7 +21,7 @@ def fen_key(board_or_fen: chess.Board | str) -> str:
 
     pieces, side to move, castling rights and en-passant square — but not the
     move counters, so the same position reached by different move orders
-    (a transposition) gets the same key (spec 8.8).
+    (a transposition) gets the same key.
     """
     fen = board_or_fen.fen() if isinstance(board_or_fen, chess.Board) else board_or_fen
     board = chess.Board(fen) if fen.count(" ") >= 3 and len(fen.split()) >= 4 else None

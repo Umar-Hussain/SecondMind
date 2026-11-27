@@ -1,4 +1,4 @@
-"""Engine-verified quizzes from leaks and prepared lines (spec 5.11, 8.5, Phase 16).
+"""Engine-verified quizzes from leaks and prepared lines.
 
 * Position = the position before the leak; question "What is the best move here?".
 * Correct answer = the recommender's move. When it came from the masters, the

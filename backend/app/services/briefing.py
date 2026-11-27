@@ -1,4 +1,4 @@
-"""Pre-game briefing (spec 5.7-5.10, Phase 15).
+"""Pre-game briefing.
 
 Combines the opponent profile with the player's repertoire and open leaks:
 

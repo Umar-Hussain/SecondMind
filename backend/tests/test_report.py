@@ -1,4 +1,4 @@
-"""Phase 14: gap report — verified moves and valid citations for every leak."""
+"""gap report — verified moves and valid citations for every leak."""
 
 import pytest
 

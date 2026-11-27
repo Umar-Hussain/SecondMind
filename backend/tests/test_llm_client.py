@@ -1,4 +1,4 @@
-"""Phase 12: structured output with a mocked client, retry on malformed output."""
+"""structured output with a mocked client, retry on malformed output."""
 
 import pytest
 

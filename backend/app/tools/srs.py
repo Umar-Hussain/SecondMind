@@ -1,4 +1,4 @@
-"""SM-2 spaced repetition (spec 8.5, Phase 16).
+"""SM-2 spaced repetition.
 
 Grades are 0-5. First successful interval 1 day, second 6 days, then the
 previous interval multiplied by the ease factor. A grade below 3 resets the

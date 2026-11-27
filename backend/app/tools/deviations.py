@@ -1,4 +1,4 @@
-"""Repertoire deviation analysis and ranking (spec 5.1.2, 8.8, Phase 8).
+"""Repertoire deviation analysis and ranking.
 
 For every game where the player has the repertoire's color, the game is
 replayed through the position-keyed tree:
@@ -32,7 +32,7 @@ from app.tools import engine, gambits
 from app.tools.pgn_utils import fen_key, uci_to_san
 from app.tools.repertoire import RepTree
 
-# (fen, color, gambit_id) -> (move_uci, source, reason) — the move recommender (Phase 11)
+# (fen, color, gambit_id) -> (move_uci, source, reason) — the move recommender
 AlternativePicker = Callable[[str, str, str | None, str | None], tuple[str | None, str | None, str]]
 
 
@@ -108,7 +108,7 @@ class _Group:
 
 def _judge(fen: str, played: str, rep_move: str, color: str, depth: int, gambit_id: str | None,
            intentional_gambit: bool) -> dict:
-    """Classify one deviation with Stockfish (thresholds from spec 8.8)."""
+    """Classify one deviation with Stockfish."""
     s = get_settings()
     best = engine.evaluate(fen, depth=depth)
     scores = engine.evaluate_moves(fen, [played, rep_move], depth=depth)

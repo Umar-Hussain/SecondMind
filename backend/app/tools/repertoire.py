@@ -1,8 +1,8 @@
-"""Repertoire import, position-keyed tree and validation (spec 5.1.1, 8.8, Phase 7).
+"""Repertoire import, position-keyed tree and validation.
 
 The tree is keyed by **normalized position** (first four FEN fields), never by
 move path, so two move orders reaching the same position share one node and
-transpositions are recognised automatically (spec B5 pitfall).
+transpositions are recognised automatically.
 
 Each node stores:
 
@@ -60,7 +60,7 @@ class RepTree:
     def user_turn(self) -> chess.Color:
         return chess.WHITE if self.color == "white" else chess.BLACK
 
-    # --- queries (spec Phase 7 step 5) ------------------------------------
+    # --- queries ------------------------------------
     def is_in_tree(self, key: str) -> bool:
         return key in self.nodes
 

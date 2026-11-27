@@ -1,4 +1,4 @@
-"""Phase 9: theory corpus and hybrid retrieval."""
+"""theory corpus and hybrid retrieval."""
 
 from app.tools.rag import get_index, load_corpus, master_games_for, retrieve
 

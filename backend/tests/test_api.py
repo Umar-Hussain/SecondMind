@@ -1,4 +1,4 @@
-"""Phase 25: API end to end — sign up, upload a repertoire, analyse, inspect, train."""
+"""API end to end — sign up, upload a repertoire, analyse, inspect, train."""
 
 import itertools
 

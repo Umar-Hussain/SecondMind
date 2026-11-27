@@ -1,4 +1,4 @@
-"""Practical move recommender: masters versus Stockfish (spec 5.4, 8.2, Phase 11).
+"""Practical move recommender: masters versus Stockfish.
 
 Rule (thresholds in config):
 
@@ -170,7 +170,7 @@ def leak_recommender(depth: int | None = None):
 
 
 def repertoire_picker(depth: int | None = None):
-    """Deviation picker: the repertoire move if sound, else the recommender (spec 8.8)."""
+    """Deviation picker: the repertoire move if sound, else the recommender."""
     s = get_settings()
 
     def _pick(fen: str, color: str, rep_move: str | None, gambit_id: str | None):

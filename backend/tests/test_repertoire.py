@@ -1,4 +1,4 @@
-"""Phase 7: repertoire import, transpositions, validation and PGN round trip."""
+"""repertoire import, transpositions, validation and PGN round trip."""
 
 import chess
 

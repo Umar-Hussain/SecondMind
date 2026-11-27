@@ -1,4 +1,4 @@
-"""Lichess API client (spec Phase 3).
+"""Lichess API client.
 
 Uses the public games export endpoint, streamed as NDJSON::
 

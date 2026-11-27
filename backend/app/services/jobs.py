@@ -1,4 +1,4 @@
-"""Scheduled automation (spec 12, Phase 18).
+"""Scheduled automation.
 
 * daily   — re-fetch new games, re-mine leaks, refresh deviation statuses;
 * daily   — create quizzes for new leaks and queue the due ones for delivery;
