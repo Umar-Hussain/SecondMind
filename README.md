@@ -12,8 +12,6 @@ quizzes and spaced repetition.
 > scheduler) produce every chess fact. The LLM diagnoses, explains and orchestrates. Nothing the model
 > says about a move, evaluation or source reaches the user unless the **verification guard** has checked it.
 
-Course project — AI-4009 Generative AI, Assignment 3 (Pure Product track).
-
 ---
 
 ## What works today
@@ -37,7 +35,7 @@ Course project — AI-4009 Generative AI, Assignment 3 (Pure Product track).
 | Accounts (sign up / log in, hashed passwords, user and admin roles) | ✅ |
 | Repertoire library: admins publish, users view, copy and edit their own copy | ✅ |
 | Repertoire workspace: three-column builder, save / prune moves, notes, live engine | ✅ |
-| Concept clustering, chat, tutor hints, repertoire builder, image import | Planned (Assignment 4) |
+| Concept clustering, chat, tutor hints, repertoire builder, image import | Planned |
 
 ---
 
